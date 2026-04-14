@@ -43,12 +43,13 @@ function DataCard({
 
   const [showEditOverlay, setShowEditOverlay] = useState(false);
 
-  function changeSource(sourceName, paramName) {
+  function changeSource(sourceName, paramName, userSelected = false) {
     dispatch({
       type: "params/updateMappings",
       payload: {
         name: paramName,
         mapping: sourceName,
+        userSelected,
       },
     });
   }

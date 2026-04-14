@@ -325,7 +325,7 @@ function MainView({ visID, queryData }) {
     return () => {
       clearTimeout(saveCodeTimeout.current);
     };
-  }, []);
+  }, [visMetadata?.code]);
 
   useEffect(() => {
     if (visMetadata?.parameters) {

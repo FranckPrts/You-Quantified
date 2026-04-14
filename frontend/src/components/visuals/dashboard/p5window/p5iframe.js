@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { EventMarkerStream } from "../../../devices/stream functions/event_markers";
 
@@ -18,20 +18,18 @@ export function P5iFrame({
 
   paramsRef.current = params;
 
-  useEffect(() => {
+  const source = useMemo(() => {
     if (isExecuting === "false" || isExecuting === false) {
-      return;
+      return "";
     }
 
     // Sound library not working
     let additionalPackages = extensions || [];
 
-    // Previous version
-    // https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/p5.js
     const scripts = additionalPackages
       .map((item) => `<script src=${item.url}></script>`)
       .join("\n");
-    const source = /* html */ `
+    return /* html */ `
       <html>
       <head>
         <script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"></script>
@@ -53,12 +51,11 @@ export function P5iFrame({
         <span id="error-display"></span>
         <script>${additionalScripts}</script>
         <script>${code}</script>
-        <script>${postRunScripts}</script>
+        <script>${postRunScripts || ""}</script>
       </body>
       </html>
       `;
-    iframeRef.current.srcdoc = source;
-  }, [code, extensions]);
+  }, [code, extensions, isExecuting]);
 
   useEffect(() => {
     if (iframeRef.current != null) {
@@ -86,8 +83,9 @@ export function P5iFrame({
       id="visFrame"
       title="embedded-visualization"
       ref={iframeRef}
+      srcDoc={source}
       allow="autoplay; encrypted-media"
-      sandbox="allow-same-origin allow-scripts allow-downloads allow-popups allow-forms allow-presentation"
+      sandbox="allow-same-origin allow-scripts allow-downloads allow-popups allow-forms"
       referrerPolicy="strict-origin-when-cross-origin"
       className="h-100 w-100"
     />
