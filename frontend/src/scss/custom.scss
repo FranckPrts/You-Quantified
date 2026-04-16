@@ -1753,3 +1753,13 @@ $gutters: (
   5: $spacer * 3,
   6: $spacer * 4,
 );
+
+.no-spin::-webkit-outer-spin-button,
+.no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-spin {
+  -moz-appearance: textfield;
+}

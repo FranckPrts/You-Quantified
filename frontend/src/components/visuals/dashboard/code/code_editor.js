@@ -44,25 +44,32 @@ export default function CodePane({
   const [showExtensions, setShowExtensions] = useState(false);
   const extensionsRef = useRef(null);
   useOutsideAlerter(extensionsRef, setShowExtensions);
+  const codeRef = useRef(code);
+  const setCodeRef = (val) => {
+    setCode(val)
+    codeRef.current = val;
+  };
 
   useEffect(() => {
-    let codeUpdateInterval = setInterval(() => setRemoteCode(code), 30000);
+    let codeUpdateInterval = setInterval(() => setRemoteCode(codeRef.current), 30000);
+
     const handleKeyDown = (event) => {
       const isSaveShortcut =
         (event.metaKey || event.ctrlKey) && event.key === "s";
       if (isSaveShortcut) {
         event.preventDefault();
-        setRemoteCode(code);
+        setRemoteCode(codeRef.current);
       }
     };
-    window.addEventListener("beforeunload", () => setRemoteCode(code));
+
+    window.addEventListener("beforeunload", () => setRemoteCode(codeRef.current));
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       clearInterval(codeUpdateInterval);
-      setRemoteCode(code);
+      setRemoteCode(codeRef.current);
       window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("beforeunload", () => setRemoteCode(code));
+      window.removeEventListener("beforeunload", () => setRemoteCode(codeRef.current));
     };
   }, []);
 
@@ -95,7 +102,7 @@ export default function CodePane({
         </div>
       </div>
       <div className="h-100">
-        <CodeEditor code={code} setCode={setCode} isEditable={isEditable} />
+        <CodeEditor code={code} setCode={setCodeRef} isEditable={isEditable} />
       </div>
     </div>
   );
@@ -117,7 +124,7 @@ function ExtensionsModal({ setShowExtensions, setExtensions, extensions }) {
     }
 
     const packageInfo = await checkCDNPackage(submittedExtension).catch((e) =>
-      console.log(e)
+      console.log(e),
     );
     //const packageInfo = await simpleCheckPackage(submittedExtension)
 
@@ -252,7 +259,7 @@ async function checkCDNPackage(inputURL) {
     matched = pathname.match(/\/libs\/([^/]+)\/([\w.\-+]+)\//);
     if (!matched) {
       throw new Error(
-        "Could not parse package name and version from cdnjs URL"
+        "Could not parse package name and version from cdnjs URL",
       );
     }
     [, name, version] = matched; // destructuring match groups
@@ -263,7 +270,7 @@ async function checkCDNPackage(inputURL) {
     matched = pathname.match(/\/npm\/((?:@[^@/]+\/)?[^@/]+)@([^/]+)/);
     if (!matched) {
       throw new Error(
-        "Could not parse package name and version from jsDelivr URL"
+        "Could not parse package name and version from jsDelivr URL",
       );
     }
     [, name, version] = matched;
@@ -285,7 +292,7 @@ async function checkCDNPackage(inputURL) {
 
   if (!packageMetadataRaw.ok) {
     throw new Error(
-      `Metadata request failed with status ${packageMetadataRaw.status}`
+      `Metadata request failed with status ${packageMetadataRaw.status}`,
     );
   }
 
