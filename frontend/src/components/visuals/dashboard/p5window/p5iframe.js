@@ -8,6 +8,7 @@ export function P5iFrame({
   isExecuting = true,
   extensions,
   additionalScripts,
+  isPaused,
   handleWindowMessage,
   handleWindowDismount = () => {},
   postRunScripts,
@@ -15,7 +16,8 @@ export function P5iFrame({
   const iframeRef = useRef(null);
 
   const paramsRef = useRef(params);
-
+  const isPausedRef = useRef(isPaused);
+  isPausedRef.current = isPaused;
   paramsRef.current = params;
 
   const source = useMemo(() => {
@@ -59,11 +61,13 @@ export function P5iFrame({
 
   useEffect(() => {
     if (iframeRef.current != null) {
-      iframeRef.current?.contentWindow?.postMessage(
-        JSON.stringify(paramsRef.current)
-      );
+      if (!isPaused) {
+        iframeRef.current?.contentWindow?.postMessage(
+          JSON.stringify(paramsRef.current)
+        );
+      }
     }
-  }, [params]);
+  }, [params, isPaused]);
 
   function getWindowMessage(message) {
     if (message.source != iframeRef.current?.contentWindow) return;

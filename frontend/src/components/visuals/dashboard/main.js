@@ -31,6 +31,7 @@ export function VisualScreen({
   code,
   popupVisuals,
   currentScreen,
+  isPaused,
   docsContent,
   setters,
   isEditable,
@@ -92,6 +93,7 @@ export function VisualScreen({
           popupVisuals={popupVisuals}
           setPopupVisuals={setters.setPopupVisuals}
           extensions={visMetadata?.extensions}
+          isPaused={isPaused}
         />
       </SplitPaneRight>
     </SplitPane>
@@ -190,6 +192,7 @@ function MainView({ visID, queryData }) {
   const [isDirty, _setIsDirty] = useState(false);
   const isDirtyRef = useRef(false);
   const saveCodeTimeout = useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   const setIsDirty = useCallback((value) => {
     isDirtyRef.current = value;
@@ -211,7 +214,7 @@ function MainView({ visID, queryData }) {
     variables: {
       where: { id: visID },
     },
-    refetchQueries: [MY_VISUALS, "VisualsQuery"],
+    // refetchQueries: [MY_VISUALS, "VisualsQuery"],
     onCompleted: () => {
       setIsDirty(false);
     },
@@ -354,11 +357,14 @@ function MainView({ visID, queryData }) {
         mutationData={mutationData}
         changeVisMetadata={changeVisMetadata}
         isDirty={isDirty}
+        isPaused={isPaused}
+        setIsPaused={setIsPaused}
       />
       <VisualScreen
         isEditable={isEditable}
         visMetadata={visMetadata}
         code={code}
+        isPaused={isPaused}
         popupVisuals={popupVisuals}
         currentScreen={currentScreen}
         fullScreenHandle={fullScreenHandle}

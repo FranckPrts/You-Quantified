@@ -14,6 +14,7 @@ export function VisualsWindow({
   fullScreenHandle,
   popupVisuals,
   setPopupVisuals,
+  isPaused,
   extensions,
 }) {
   // Window with the visuals. It loads and manages the React components that enter
@@ -51,7 +52,9 @@ export function VisualsWindow({
   const eventStream = new EventMarkerStream(visID);
 
   function handleWindowMessage(message) {
-    eventStream.streamEventMarkers(message);
+    
+      eventStream.streamEventMarkers(message);
+    
   }
 
   function handleWindowDismount() {
@@ -76,6 +79,7 @@ export function VisualsWindow({
               additionalScripts={additionalScripts}
               handleWindowMessage={handleWindowMessage}
               handleWindowDismount={handleWindowDismount}
+              isPaused={isPaused}
             />
           </FullScreen>
         </div>
