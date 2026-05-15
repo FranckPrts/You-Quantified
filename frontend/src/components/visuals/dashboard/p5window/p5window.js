@@ -52,9 +52,7 @@ export function VisualsWindow({
   const eventStream = new EventMarkerStream(visID);
 
   function handleWindowMessage(message) {
-    
-      eventStream.streamEventMarkers(message);
-    
+    eventStream.streamEventMarkers(message);
   }
 
   function handleWindowDismount() {

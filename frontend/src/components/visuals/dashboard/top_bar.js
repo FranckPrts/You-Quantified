@@ -109,7 +109,7 @@ export function VisTopBar({
             {isPaused ? "pause" : "play_arrow"}
           </span>
         </button>
-        {/* Popup button that isn't working has been commented out
+
         <button
           className="btn btn-link"
           onClick={() => setPopupVisuals(!popupVisuals)}
@@ -118,7 +118,6 @@ export function VisTopBar({
             <i className="bi bi-window" alt="popup-window"></i>
           </b>
         </button>
-        */}
         {isEditable && (
           <PrivacyDropdown
             currentPrivacy={currentPrivacy}
