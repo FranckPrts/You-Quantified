@@ -38,6 +38,7 @@ export function VisualScreen({
   isDirty,
   isDirtyRef,
 }) {
+  const [errors, setErrors] = useState([]);
   const fullScreenHandle = useFullScreenHandle();
   const visName = visMetadata?.title;
 
@@ -64,6 +65,8 @@ export function VisualScreen({
             isDirtyRef={isDirtyRef}
             setIsDirty={setters.setIsDirty}
             setRemoteCode={setters.setRemoteCode}
+            errors={errors}
+            setErrors={setErrors}
           />
         )}
         {currentScreen.left == "docs" && (
@@ -88,6 +91,7 @@ export function VisualScreen({
       <SplitPaneRight>
         <VisualsWindow
           code={code}
+          setErrors={setErrors}
           visMetadata={visMetadata}
           fullScreenHandle={fullScreenHandle}
           popupVisuals={popupVisuals}

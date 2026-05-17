@@ -29,12 +29,12 @@ export function P5iFrame({
     let additionalPackages = extensions || [];
 
     const scripts = additionalPackages
-      .map((item) => `<script src=${item.url}></script>`)
+      .map((item) => `<script src=${item.url} crossorigin="anonymous"></script>`)
       .join("\n");
     return /* html */ `
       <html>
       <head>
-        <script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js" crossorigin="anonymous"></script>
         ${scripts}
         <style>
           body {
@@ -52,7 +52,46 @@ export function P5iFrame({
         <div id="app"></div>
         <span id="error-display"></span>
         <script>${additionalScripts}</script>
-        <script>${code}</script>
+        <script>
+          window.addEventListener("error", (event) => {
+            const errorInfo = {
+              message: event.error?.message || event.message || 'Unknown error',
+              stack: event.error?.stack || '',
+              lineno: event.lineno - 65 || 0,
+              colno: event.colno || 0,
+              type: 'error'
+            };
+            sendEvent({log: errorInfo});
+          });
+          
+          try {
+            ${code}
+            if (typeof window.setup === 'function') {
+              const originalSetup = window.setup;
+              window.setup = function() {
+                try {
+                  return originalSetup.apply(this, arguments);
+                } catch (error) {
+                  console.error('Error in setup:', error);
+                  sendEvent({log: {
+                    message: 'Error in setup: '+ error.message || String(error),
+                    stack: error.stack || '',
+                    type: 'error'
+                  }});
+                  throw error;
+                }
+              };
+            }
+            sendEvent({clearErrors: true});
+          } catch (error) {
+            console.error('Error:', error);
+            sendEvent({log: {
+              message: error.message || String(error),
+              stack: error.stack || '',
+              type: 'error'
+            }});
+          }
+        </script>
         <script>${postRunScripts || ""}</script>
       </body>
       </html>
