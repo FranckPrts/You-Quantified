@@ -106,7 +106,7 @@ export function VisTopBar({
         )}
         <button className="btn btn-link" onClick={()=>setIsPaused(!isPaused)}>
           <span className="material-symbols-outlined inline-icon">
-            {isPaused ? "pause" : "play_arrow"}
+            {isPaused ? "play_arrow" : "pause"}
           </span>
         </button>
 

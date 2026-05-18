@@ -83,6 +83,23 @@ export function P5iFrame({
               };
             }
             sendEvent({clearErrors: true});
+            if (typeof window.draw === 'function') {
+              const originalDraw = window.draw;
+              window.draw = function() {
+                try {
+                  if (data?.["isVisualJSPaused"]) return;
+                  return originalDraw.apply(this, arguments);
+                } catch (error) {
+                  console.error('Error in draw:', error);
+                  sendEvent({log: {
+                    message: 'Error in draw: '+ error.message || String(error),
+                    stack: error.stack || '',
+                    type: 'error'
+                  }});
+                  throw error;
+                }
+              };
+            }
           } catch (error) {
             console.error('Error:', error);
             sendEvent({log: {
@@ -100,11 +117,13 @@ export function P5iFrame({
 
   useEffect(() => {
     if (iframeRef.current != null) {
-      if (!isPaused) {
-        iframeRef.current?.contentWindow?.postMessage(
-          JSON.stringify(paramsRef.current)
-        );
-      }
+      const messageData = {
+        ...paramsRef.current,
+        isVisualJSPaused: isPaused
+      };
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify(messageData)
+      );
     }
   }, [params, isPaused]);
 
