@@ -100,23 +100,34 @@ export default function CodePane({
           >
             <span className="material-symbols-outlined">download</span>
           </button>
-          <button
-            className="btn btn-link small-bar-button-dark"
-            onClick={() => setShowExtensions(true)}
-          >
-            <span className="material-symbols-outlined">extension</span>
-          </button>
-          <button
-            className="btn btn-link small-bar-button-dark position-relative"
-            onClick={() => setShowErrors(true)}
-          >
-            <span className={`material-symbols-outlined ${errors.some(e => e?.type === 'error') ? 'text-danger' : ''}`}>bug_report</span>
-            {errors.length > 0 && (
-              <span className={`position-absolute top-0 start-100 translate-middle badge rounded-pill ${errors.some(e => e?.type === 'error') ? 'bg-danger' : 'bg-secondary'}`} style={{fontSize: '9px'}}>
-                {errors.length}
-              </span>
-            )}
-          </button>
+          {isEditable &&
+            <div className="d-flex">
+              <button
+                className="btn btn-link small-bar-button-dark"
+                onClick={() => setShowExtensions(true)}
+              >
+                <span className="material-symbols-outlined">extension</span>
+              </button>
+              <button
+                className="btn btn-link small-bar-button-dark position-relative"
+                onClick={() => setShowErrors(true)}
+              >
+                <span
+                  className={`material-symbols-outlined ${errors.some((e) => e?.type === "error") ? "text-danger" : ""}`}
+                >
+                  bug_report
+                </span>
+                {errors.length > 0 && (
+                  <span
+                    className={`position-absolute top-50 start-0 translate-middle badge rounded-pill ${errors.some((e) => e?.type === "error") ? "bg-danger" : "bg-secondary"}`}
+                    style={{ fontSize: "9px" }}
+                  >
+                    {errors.length == 50 ? "50+" : errors.length}
+                  </span>
+                )}
+              </button>
+            </div>
+          }
           {showExtensions && (
             <div ref={extensionsRef} className="extensions-popup">
               <ExtensionsModal
@@ -128,7 +139,11 @@ export default function CodePane({
           )}
           {showErrors && (
             <div ref={errorsRef} className="extensions-popup">
-              <ErrorsModal setShowErrors={setShowErrors} errors={errors} setErrors={setErrors} />
+              <ErrorsModal
+                setShowErrors={setShowErrors}
+                errors={errors}
+                setErrors={setErrors}
+              />
             </div>
           )}
         </div>
@@ -165,7 +180,7 @@ function ErrorsModal({ setShowErrors, errors, setErrors }) {
           </button>
         </div>
       </div>
-      <div className="mt-2" style={{maxHeight: '300px', overflowY: 'auto'}}>
+      <div className="mt-2" style={{ maxHeight: "300px", overflowY: "auto" }}>
         {errors.length === 0 ? (
           <p className="text-light">No logs</p>
         ) : (
@@ -181,41 +196,52 @@ function ErrorsModal({ setShowErrors, errors, setErrors }) {
 }
 
 function LogItem({ log }) {
-  const isError = log?.type === 'error';
-  
+  const isError = log?.type === "error";
+
   if (isError) {
     // Detect Safari in the code editor
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    
-    const errorMessage = log?.message || 'Unknown error';
-    const errorStack = log?.stack || '';
-    
+
+    const errorMessage = log?.message || "Unknown error";
+    const errorStack = log?.stack || "";
+
     const lineno = log?.lineno;
     const colno = log?.colno;
-    const lineInfo = lineno ? ` (Line ${lineno}${colno ? `:${colno}` : ''})` : '';
-    
-    const isMaskedError = errorMessage === 'Script error' || errorMessage === 'Script error.' || errorMessage === 'Unknown error';
+    const lineInfo = lineno
+      ? ` (Line ${lineno}${colno ? `:${colno}` : ""})`
+      : "";
+
+    const isMaskedError =
+      errorMessage === "Script error" ||
+      errorMessage === "Script error." ||
+      errorMessage === "Unknown error";
 
     return (
       <div className="text-danger small py-1">
         {isSafari && isMaskedError && (
           <div className="text-warning mb-1 small">
-            <strong>Safari:</strong> Error details may be limited. Check browser console.
+            <strong>Safari:</strong> Error details may be limited. Check browser
+            console.
           </div>
         )}
         <div className="d-flex align-items-start">
-          <span className="material-symbols-outlined me-2" style={{fontSize: '16px'}}>error</span>
+          <span
+            className="material-symbols-outlined me-2"
+            style={{ fontSize: "16px" }}
+          >
+            error
+          </span>
           <div className="flex-grow-1">
             <div>
               <strong>{errorMessage}</strong>
-              {lineInfo && <span className="text-warning ms-1">{lineInfo}</span>}
+              {lineInfo && (
+                <span className="text-warning ms-1">{lineInfo}</span>
+              )}
             </div>
             {errorStack && (
               <details className="mt-1">
                 <summary className="text-white small">Stack trace</summary>
-                <pre className="text-white mt-1 mb-0 small">
-                  {errorStack}
-                </pre>
+                <pre className="text-white mt-1 mb-0 small">{errorStack}</pre>
               </details>
             )}
           </div>
@@ -223,11 +249,16 @@ function LogItem({ log }) {
       </div>
     );
   }
-  
+
   const logMessage = log?.message || String(log);
   return (
     <div className="text-light small py-1 d-flex align-items-start">
-      <span className="material-symbols-outlined me-2" style={{fontSize: '16px'}}>terminal</span>
+      <span
+        className="material-symbols-outlined me-2"
+        style={{ fontSize: "16px" }}
+      >
+        terminal
+      </span>
       <div className="flex-grow-1">{logMessage}</div>
     </div>
   );
