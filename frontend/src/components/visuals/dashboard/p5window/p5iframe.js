@@ -87,7 +87,7 @@ export function P5iFrame({
               const originalDraw = window.draw;
               window.draw = function() {
                 try {
-                  if (data?.["isVisualJSPaused"]) return;
+                  if (data?.["isVisualJSPaused"]) noLoop();
                   return originalDraw.apply(this, arguments);
                 } catch (error) {
                   console.error('Error in draw:', error);

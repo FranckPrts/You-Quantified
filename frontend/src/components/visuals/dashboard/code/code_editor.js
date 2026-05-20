@@ -185,7 +185,7 @@ function ErrorsModal({ setShowErrors, errors, setErrors }) {
           <p className="text-light">No logs</p>
         ) : (
           <div className="d-flex flex-column gap-1">
-            {errors.map((log, index) => (
+            {errors.toReversed().map((log, index) => (
               <LogItem key={index} log={log} />
             ))}
           </div>

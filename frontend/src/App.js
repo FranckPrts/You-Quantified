@@ -36,7 +36,7 @@ function NavBar({ setShowDevices, recording, setRecording }) {
           <MyUserName />
         </div>
         <NavLink className="nav-link" to="/visuals">
-          Visuals
+          Projects
         </NavLink>
         <button className="data-btn" onClick={() => setShowDevices(true)}>
           Data
