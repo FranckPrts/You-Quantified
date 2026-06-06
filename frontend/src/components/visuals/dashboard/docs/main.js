@@ -4,7 +4,7 @@ import ListItem from "@tiptap/extension-list-item";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import Blockquote from "@tiptap/extension-blockquote";
-import TextStyle from "@tiptap/extension-text-style";
+import { TextStyle } from "@tiptap/extension-text-style";
 import { Extension } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -13,6 +13,13 @@ import javascript from "highlight.js/lib/languages/javascript";
 import { createLowlight } from "lowlight";
 import { sanitizeURL } from "../../../../utility/sanitize_urls";
 import { useOutsideAlerter } from "../../../../utility/outsideClickDetection";
+import Collaboration from '@tiptap/extension-collaboration'
+import CollaborationCaret from '@tiptap/extension-collaboration-caret'
+import {
+  useHocuspocusAwareness,
+  useHocuspocusProvider,
+  useHocuspocusConnectionStatus,
+} from "@hocuspocus/provider-react";
 
 const lowlight = createLowlight();
 lowlight.register("js", javascript);
@@ -168,26 +175,6 @@ const MenuBar = ({ editor, setIsAddingLink }) => {
   );
 };
 
-const extensions = [
-  Color.configure({ types: [TextStyle.name, ListItem.name] }),
-  TextStyle.configure({ types: [ListItem.name] }),
-  Link.extend({ inclusive: false }),
-  StarterKit.configure({
-    bulletList: {
-      keepMarks: true,
-      keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
-    },
-    orderedList: {
-      keepMarks: true,
-      keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
-    },
-  }),
-  CodeBlockLowlight.configure({ lowlight }),
-  TabHandler,
-  Underline,
-  Blockquote,
-];
-
 function LinkMenu({ editor, setIsAddingLink }) {
   const previousUrl = editor.getAttributes("link").href;
 
@@ -216,7 +203,7 @@ function LinkMenu({ editor, setIsAddingLink }) {
         })
         .run();
     },
-    [editor]
+    [editor],
   );
 
   return (
@@ -240,35 +227,50 @@ function LinkMenu({ editor, setIsAddingLink }) {
   );
 }
 
+const extensions = [
+  Color.configure({ types: [TextStyle.name, ListItem.name] }),
+  TextStyle.configure({ types: [ListItem.name] }),
+  Link.extend({ inclusive: false }),
+  StarterKit.configure({
+    bulletList: {
+      keepMarks: true,
+      keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
+    },
+    orderedList: {
+      keepMarks: true,
+      keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
+    },
+    undoRedo: false,
+  }),
+  CodeBlockLowlight.configure({ lowlight }),
+  TabHandler,
+  Underline,
+  Blockquote,
+];
+
 export default function DocsWindow({
-  updateDocsData,
   setDocsVisibility,
-  docsContent,
   isEditable,
   isDocsVisible,
-  setIsDirty,
   isDirtyRef,
+  awarenessUser,
 }) {
   const saveTimeout = React.useRef(null);
+  const provider = useHocuspocusProvider();
+  const status = useHocuspocusConnectionStatus();
+  const users = useHocuspocusAwareness();
 
   const editor = useEditor({
-    extensions: extensions,
-    content: docsContent,
+    extensions: [
+      ...extensions,
+      Collaboration.configure({ document: provider.document }),
+      CollaborationCaret.configure({
+        provider,
+        user: awarenessUser ?? { name: 'Anonymous', color: '#aaaaaa' },
+      }),
+    ],
     editable: isEditable,
   });
-
-  const saveDocs = useCallback(() => {
-    console.log("[Save Docs] IsDirty", isDirtyRef.current);
-    if (isDirtyRef.current && isEditable && editor) {
-      const content = editor.getJSON();
-      updateDocsData(content);
-    }
-  }, [isDirtyRef, isEditable, editor, updateDocsData]);
-
-  const debouncedSave = useCallback(() => {
-    clearTimeout(saveTimeout.current);
-    saveTimeout.current = setTimeout(saveDocs, 1000);
-  }, [saveDocs]);
 
   const [_isDocsVisible, _setIsDocsVisible] = useState(isDocsVisible);
 
@@ -280,42 +282,6 @@ export default function DocsWindow({
   const [isAddingLink, setIsAddingLink] = useState(false);
   const linkPopupRef = React.useRef(null);
   useOutsideAlerter(linkPopupRef, setIsAddingLink);
-
-  useEffect(() => {
-    if (!editor) return;
-
-    const handleEditorUpdate = () => {
-      console.log("[Handle Update] IsDirty", isDirtyRef.current);
-      setIsDirty(true);
-      debouncedSave();
-    };
-
-    editor.on("update", handleEditorUpdate);
-
-    const handleKeyDown = (event) => {
-      const isSaveShortcut =
-        (event.metaKey || event.ctrlKey) && event.key === "s";
-      if (isSaveShortcut) {
-
-        event.preventDefault();
-
-        console.log("Save shortcut pressed!");
-        saveDocs();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener("beforeunload", saveDocs);
-
-    let updateInterval = setInterval(saveDocs, 30000);
-
-    return () => {
-      clearTimeout(saveTimeout.current);
-      clearInterval(updateInterval);
-      saveDocs();
-      window.removeEventListener("beforeunload", saveDocs);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
 
   return (
     <div>

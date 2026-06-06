@@ -3,12 +3,24 @@ import downloadCode from "../../../../utility/code_download";
 import { useOutsideAlerter } from "../../../../utility/outsideClickDetection";
 import { useState, useRef, useEffect } from "react";
 import { ExtensionsModal } from "./extensions_modal";
+import { MonacoBinding } from "y-monaco";
+import {
+  useHocuspocusAwareness,
+  useHocuspocusProvider,
+  useHocuspocusConnectionStatus,
+} from "@hocuspocus/provider-react";
 
 // Code Editor Made Using monaco-editor/react
 // It has the advantage of using the same editor as VSCode
 // Includes syntax highlighting and intellisense
 
-export function CodeEditor({ code, setCode, isEditable }) {
+/*
+Maybe move collaborative code here
+function useCollabMonaco() {
+  
+}*/
+
+export function CodeEditor({ setCode, isEditable }) {
   const settings = {
     minimap: {
       enabled: false,
@@ -21,27 +33,52 @@ export function CodeEditor({ code, setCode, isEditable }) {
     settings["readOnly"] = false;
   }
 
+  const provider = useHocuspocusProvider();
+  const bindingRef = useRef(null);
+  const cleanupRef = useRef(null);
+
+  useEffect(() => {
+    return () => cleanupRef.current?.();
+  }, []);
+
+  const handleMount = (editor) => {
+    const yText = provider.document.getText("monaco");
+    const observer = () => setCode(yText.toString());
+    yText.observe(observer);
+    bindingRef.current = new MonacoBinding(
+      yText,
+      editor.getModel(),
+      new Set([editor]),
+      provider.awareness,
+    );
+    
+    cleanupRef.current = () => {
+      yText.unobserve(observer);
+      bindingRef.current?.destroy();
+      bindingRef.current = null;
+    };
+  };
+
   return (
     <Editor
-      value={code}
+      onMount={handleMount}
       theme="vs-dark"
       defaultLanguage="javascript"
       options={settings}
-      onChange={(val) => setCode(val)}
+      // onChange={(value) => setCode(value)}
     />
   );
 }
 
 export default function CodePane({
-  code,
   setCode,
+  code,
   visName,
   isEditable,
   extensions,
   errors,
   setErrors,
   setExtensions,
-  setRemoteCode,
 }) {
   // This is the component that contains the code pane
   const [showExtensions, setShowExtensions] = useState(false);
@@ -52,42 +89,6 @@ export default function CodePane({
 
   useOutsideAlerter(extensionsRef, setShowExtensions);
   useOutsideAlerter(errorsRef, setShowErrors);
-
-  const codeRef = useRef(code);
-  const setCodeRef = (val) => {
-    setCode(val);
-    codeRef.current = val;
-  };
-
-  useEffect(() => {
-    let codeUpdateInterval = setInterval(
-      () => setRemoteCode(codeRef.current),
-      30000,
-    );
-
-    const handleKeyDown = (event) => {
-      const isSaveShortcut =
-        (event.metaKey || event.ctrlKey) && event.key === "s";
-      if (isSaveShortcut) {
-        event.preventDefault();
-        setRemoteCode(codeRef.current);
-      }
-    };
-
-    window.addEventListener("beforeunload", () =>
-      setRemoteCode(codeRef.current),
-    );
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      clearInterval(codeUpdateInterval);
-      setRemoteCode(codeRef.current);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("beforeunload", () =>
-        setRemoteCode(codeRef.current),
-      );
-    };
-  }, []);
 
   return (
     <div className="h-100 d-flex flex-column">
@@ -100,7 +101,7 @@ export default function CodePane({
           >
             <span className="material-symbols-outlined">download</span>
           </button>
-          {isEditable &&
+          {isEditable && (
             <div className="d-flex">
               <button
                 className="btn btn-link small-bar-button-dark"
@@ -127,7 +128,7 @@ export default function CodePane({
                 )}
               </button>
             </div>
-          }
+          )}
           {showExtensions && (
             <div ref={extensionsRef} className="extensions-popup">
               <ExtensionsModal
@@ -149,7 +150,7 @@ export default function CodePane({
         </div>
       </div>
       <div className="h-100">
-        <CodeEditor code={code} setCode={setCodeRef} isEditable={isEditable} />
+        <CodeEditor code={code} setCode={setCode} isEditable={isEditable} />
       </div>
     </div>
   );

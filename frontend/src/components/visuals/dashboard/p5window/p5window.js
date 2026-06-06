@@ -103,7 +103,7 @@ export function VisualsWindow({
     <div className={`${popupVisuals ? "d-none" : "h-100 w-100"}`}>
       {!popupVisuals && (
         <div className="w-100 h-100">
-          <FullScreen handle={fullScreenHandle} className="w-100 h-100">
+
             <P5iFrame
               code={code}
               params={params}
@@ -114,7 +114,7 @@ export function VisualsWindow({
               handleWindowDismount={handleWindowDismount}
               isPaused={isPaused}
             />
-          </FullScreen>
+
         </div>
       )}
       {popupVisuals && (
