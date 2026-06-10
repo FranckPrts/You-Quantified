@@ -52,7 +52,7 @@ export function VisualScreen({
   return (
     <SplitPane className="split-pane-row">
       <SplitPaneLeft show={`${showDashboard}`}>
-        <HocuspocusRoom name={`yq-code:${visMetadata?.id}`}>
+        <HocuspocusRoom name={`yqVis:${visMetadata?.id}`}>
           <SetAwarenessUser user={awarenessUser} currentView="code" />
           <CodeObserver setCode={setters.setCode} />
           {currentScreen.left === "code" && (
@@ -72,7 +72,7 @@ export function VisualScreen({
           )}
         </HocuspocusRoom>
         {currentScreen.left == "docs" && (
-          <HocuspocusRoom name={`yq-docs:${visMetadata?.id}`}>
+          <HocuspocusRoom name={`yqDoc:${visMetadata?.id}`}>
             <SetAwarenessUser user={awarenessUser} currentView="docs" />
             <DocsWindow
               updateDocsData={setters.updateDocsData}

@@ -125,7 +125,7 @@ export default function MainView({ visID, queryData }) {
 
   return (
     <HocuspocusProviderWebsocketComponent url={collabEndpoint}>
-      <HocuspocusRoom name={`yq-presence:${visID}`}>
+      <HocuspocusRoom name={`yqPresence:${visID}`}>
         <SetAwarenessUser
           user={awarenessUser}
           currentView={currentScreen.left}
