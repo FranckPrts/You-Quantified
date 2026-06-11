@@ -48,7 +48,7 @@ export default function SignUp() {
   return (
     <div className="login-div mt-5">
       <div className="d-flex mb-4 align-items-center justify-content-between">
-        <h5 className=" m-0 p-0">Sign up</h5>
+        <h1 className=" m-0 p-0 h5">Sign up</h1>
         {currScreen !== "signed-up" && (
           <Link to="/login" className="btn btn-dark fw-medium">
             Log in instead

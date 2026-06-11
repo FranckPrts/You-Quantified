@@ -17,7 +17,7 @@ export function VisTopBar({
   isEditable,
   isPaused,
   isDirty,
-  setIsPaused
+  setIsPaused,
 }) {
   const [showEdit, setShowEdit] = useState(false);
   const editPopupRef = useRef(null);
@@ -96,20 +96,22 @@ export function VisTopBar({
             </div>
           </div>
         )}
-        <h5 className="align-self-center m-0 text-center ms-3 text-truncate">
-          {visMetadata?.title}
-        </h5>
+        <div className="m-0 ms-3 text-start">
+          <h1 className="small fw-normal m-0">Editor</h1>
+          <h2 className="h5 align-self-center m-0 text-truncate">
+            {visMetadata?.title}
+          </h2>
+        </div>
       </div>
       <div className="d-flex justify-content-end align-items-center">
         {isEditable && (
           <ShowUploadState mutationData={mutationData} isDirty={isDirty} />
         )}
-        <button className="btn btn-link" onClick={()=>setIsPaused(!isPaused)}>
+        <button className="btn btn-link" onClick={() => setIsPaused(!isPaused)}>
           <span className="material-symbols-outlined inline-icon">
             {isPaused ? "play_arrow" : "pause"}
           </span>
         </button>
-
         <button
           className="btn btn-link"
           onClick={() => setPopupVisuals(!popupVisuals)}
