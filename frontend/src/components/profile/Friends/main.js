@@ -27,7 +27,7 @@ function FriendUserPage({ userData, currentUser }) {
   return (
     <div className="h-100 center-margin overflow-scroll disable-scrollbar">
       <div className="align-items-start mb-4 sticky-top bg-white pb-2 z-1 pt-2">
-        <h2 className="mt-5 ">{userData.username}</h2>
+        <h1 className="mt-5 h2">{userData.username}</h1>
         <span>Check out this user's visuals and manage your friendship.</span>
       </div>
       <div className="mb-3">

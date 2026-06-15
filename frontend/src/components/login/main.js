@@ -11,6 +11,7 @@ import { useContext } from "react";
 import { UserContext } from "../../App";
 import { useSearchParams, Navigate, Link } from "react-router-dom";
 import { Nav } from "react-bootstrap";
+import { User } from "../profile/main";
 
 export default function Login() {
   const { currentUser, setCurrentUser } = useContext(UserContext);
@@ -36,6 +37,7 @@ export function LoggedInScreen({ currentUser, setCurrentUser }) {
     },
   });
 
+  
   const [searchParams, setSearchParams] = useSearchParams();
   const redirectVisual = searchParams.get("visual");
   const redirectUser = searchParams.get("user");
@@ -43,9 +45,17 @@ export function LoggedInScreen({ currentUser, setCurrentUser }) {
   if (redirectVisual) {
     return <Navigate to={`/visuals/${redirectVisual}`} />;
   }
+
+
+
+  return <Navigate to={`/user/${currentUser?.id}`}/>
+  
+
+  /*
+  No longer redirects when logging in / out
   if (redirectUser) {
     return <Navigate to={`/user/${redirectUser}`} />;
-  }
+  }*/
 
   return (
     <div>
@@ -103,7 +113,7 @@ function LoginScreen({ setCurrentUser }) {
       </div>
       <div className="login-div mt-5">
         <div className="d-flex mb-4 align-items-center justify-content-between">
-          <h5 className="m-0 p-0">Log in</h5>
+          <h1 className="m-0 p-0 h5">Log in</h1>
           <Link to="/signup" className="btn btn-dark fw-medium">
             Sign up instead
           </Link>

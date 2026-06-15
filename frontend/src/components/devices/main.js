@@ -67,7 +67,7 @@ export function DevicesManager({
           </button>
         </div>
         <div className="text-end me-3 ms-3 p-0">
-          <h2 className="mb-2  ms-5">Data Sources</h2>
+          <h1 className="h2 mb-2  ms-5">Data Sources</h1>
           <p>Connect and manage devices seamlessly within this dashboard.</p>
         </div>
       </div>

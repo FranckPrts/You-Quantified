@@ -4,7 +4,7 @@ import { UserContext } from "../../../App";
 import { useOutsideAlerter } from "../../../utility/outsideClickDetection";
 
 import { useState, useRef, useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@apollo/client";
 
 import { DELETE_REQUEST, GET_FRIENDS } from "../../../queries/friends";
@@ -15,6 +15,7 @@ export function MyUserPage({ userData, myFriends }) {
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const requestsModalRef = useRef(null);
   const addModalRef = useRef(null);
+  const navigate = useNavigate();
 
   const receivedRequests = myFriends.filter(
     ({ status, myRole }) => status === "pending" && myRole === "recipient"
@@ -28,6 +29,7 @@ export function MyUserPage({ userData, myFriends }) {
   const [endSession, { data, loading }] = useMutation(END_SESSION, {
     update() {
       setCurrentUser(undefined);
+      navigate(`/login`);
     },
   });
 
@@ -48,7 +50,7 @@ export function MyUserPage({ userData, myFriends }) {
     <div className="h-100 center-margin overflow-scroll disable-scrollbar">
       <div className="align-items-start mb-3">
         <div className="d-flex align-items-end">
-          <h2 className="mt-5 mb-2 ">You</h2>
+          <h1 className="mt-5 mb-2 h2">You</h1>
           {userData?.isAdmin && (
             <small className="ms-3 mb-3 p-1 ps-2 pe-2 border border-dark bg-light">
               Admin
