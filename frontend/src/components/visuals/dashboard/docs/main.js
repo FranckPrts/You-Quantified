@@ -13,8 +13,8 @@ import javascript from "highlight.js/lib/languages/javascript";
 import { createLowlight } from "lowlight";
 import { sanitizeURL } from "../../../../utility/sanitize_urls";
 import { useOutsideAlerter } from "../../../../utility/outsideClickDetection";
-import Collaboration from '@tiptap/extension-collaboration'
-import CollaborationCaret from '@tiptap/extension-collaboration-caret'
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCaret from "@tiptap/extension-collaboration-caret";
 import {
   useHocuspocusAwareness,
   useHocuspocusProvider,
@@ -227,7 +227,7 @@ function LinkMenu({ editor, setIsAddingLink }) {
   );
 }
 
-const extensions = [
+export const extensions = [
   Color.configure({ types: [TextStyle.name, ListItem.name] }),
   TextStyle.configure({ types: [ListItem.name] }),
   Link.extend({ inclusive: false }),
@@ -252,21 +252,21 @@ export default function DocsWindow({
   setDocsVisibility,
   isEditable,
   isDocsVisible,
-  isDirtyRef,
-  awarenessUser,
 }) {
   const saveTimeout = React.useRef(null);
   const provider = useHocuspocusProvider();
   const status = useHocuspocusConnectionStatus();
   const users = useHocuspocusAwareness();
+  console.log("yJS Users");
+  console.log(users);
 
   const editor = useEditor({
     extensions: [
       ...extensions,
-      Collaboration.configure({ document: provider.document }),
+      Collaboration.configure({ document: provider.document, field: "docs" }),
       CollaborationCaret.configure({
         provider,
-        user: awarenessUser ?? { name: 'Anonymous', color: '#aaaaaa' },
+        user: { name: users[0]?.user?.name, color: users[0]?.user?.color },
       }),
     ],
     editable: isEditable,

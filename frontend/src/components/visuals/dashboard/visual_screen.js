@@ -9,7 +9,10 @@ import SplitPane, {
   SplitPaneRight,
   Divider,
 } from "../../../utility/SplitPane";
-import { HocuspocusRoom, useHocuspocusProvider } from "@hocuspocus/provider-react";
+import {
+  HocuspocusRoom,
+  useHocuspocusProvider,
+} from "@hocuspocus/provider-react";
 import { SetAwarenessUser } from "./main_view";
 
 function CodeObserver({ setCode }) {
@@ -47,44 +50,36 @@ export function VisualScreen({
     currentScreen.left !== "none" &&
     (viewParam === "true" || viewParam === null);
 
-
-
   return (
     <SplitPane className="split-pane-row">
       <SplitPaneLeft show={`${showDashboard}`}>
-        <HocuspocusRoom name={`yqVis:${visMetadata?.id}`}>
-          <SetAwarenessUser user={awarenessUser} currentView="code" />
-          <CodeObserver setCode={setters.setCode} />
-          {currentScreen.left === "code" && (
-            <CodePane
-              visName={visName}
-              setCode={setters.setCode}
-              code={code}
-              isEditable={isEditable}
-              extensions={visMetadata?.extensions}
-              setExtensions={setters.setExtensions}
-              isDirtyRef={isDirtyRef}
-              setIsDirty={setters.setIsDirty}
-              setRemoteCode={setters.setRemoteCode}
-              errors={errors}
-              setErrors={setErrors}
-            />
-          )}
-        </HocuspocusRoom>
+        <CodeObserver setCode={setters.setCode} />
+        {currentScreen.left === "code" && (
+          <CodePane
+            visName={visName}
+            setCode={setters.setCode}
+            code={code}
+            isEditable={isEditable}
+            extensions={visMetadata?.extensions}
+            setExtensions={setters.setExtensions}
+            isDirtyRef={isDirtyRef}
+            setIsDirty={setters.setIsDirty}
+            setRemoteCode={setters.setRemoteCode}
+            errors={errors}
+            setErrors={setErrors}
+          />
+        )}
         {currentScreen.left == "docs" && (
-          <HocuspocusRoom name={`yqDoc:${visMetadata?.id}`}>
-            <SetAwarenessUser user={awarenessUser} currentView="docs" />
-            <DocsWindow
-              updateDocsData={setters.updateDocsData}
-              setDocsVisibility={setters.setDocsVisibility}
-              docsContent={docsContent}
-              isEditable={isEditable}
-              isDocsVisible={isDocsVisible}
-              isDirtyRef={isDirtyRef}
-              setIsDirty={setters.setIsDirty}
-              awarenessUser={awarenessUser}
-            />
-          </HocuspocusRoom>
+          <DocsWindow
+            updateDocsData={setters.updateDocsData}
+            setDocsVisibility={setters.setDocsVisibility}
+            docsContent={docsContent}
+            isEditable={isEditable}
+            isDocsVisible={isDocsVisible}
+            isDirtyRef={isDirtyRef}
+            setIsDirty={setters.setIsDirty}
+            awarenessUser={awarenessUser}
+          />
         )}
         <DataManagementWindow
           visInfo={visMetadata}

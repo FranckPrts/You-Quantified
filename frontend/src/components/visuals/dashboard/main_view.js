@@ -1,4 +1,10 @@
-import React, { useContext, useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { useFullScreenHandle } from "react-full-screen";
 import { VisTopBar } from "./top_bar";
 import { VisualScreen } from "./visual_screen";
@@ -7,40 +13,15 @@ import { useDispatch } from "react-redux";
 import { useMutation } from "@apollo/client";
 import { CHANGE_VISUAL } from "../../../queries/visuals";
 import {
-  HocuspocusProviderWebsocketComponent,
   HocuspocusRoom,
   useHocuspocusProvider,
+  useHocuspocusEvent,
 } from "@hocuspocus/provider-react";
-
-const collabEndpoint =
-  process.env.NODE_ENV === "development"
-    ? process.env.REACT_APP_COLLAB_ENDPOINT_DEV || "ws://localhost:3001/collab"
-    : process.env.REACT_APP_COLLAB_ENDPOINT;
-
-function userColor(id) {
-  let hash = 0;
-  for (const char of String(id)) {
-    hash = char.charCodeAt(0) + ((hash << 5) - hash);
-  }
-  const r = (hash >> 16) & 0xff;
-  const g = (hash >> 8) & 0xff;
-  const b = hash & 0xff;
-  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
-}
-
-export function SetAwarenessUser({ user, currentView }) {
-  const provider = useHocuspocusProvider();
-
-  useEffect(() => {
-    if (!user) return;
-    provider.setAwarenessField("user", {
-      ...user,
-      currentView,
-    });
-  }, [user, currentView, provider]);
-
-  return null;
-}
+import { fetchCode } from "../utility/fetch_code";
+import { prosemirrorJSONToYXmlFragment } from "@tiptap/y-tiptap";
+import { extensions } from "./docs/main";
+import { getSchema } from "@tiptap/core";
+import { userColor } from "../../../utility/user_colors";
 
 export default function MainView({ visID, queryData }) {
   // This function bridges the left pane (code editor/parameters) with the visualization
@@ -52,34 +33,18 @@ export default function MainView({ visID, queryData }) {
   const [popupVisuals, setPopupVisuals] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const fullScreenHandle = useFullScreenHandle();
+  const provider = useHocuspocusProvider();
 
   const isEditable =
     queryData?.author?.id === currentUser?.id || currentUser?.isAdmin;
 
-  const awarenessUser = currentUser?.id
-    ? {
-        id: currentUser.id,
-        name: currentUser.username,
-        color: userColor(currentUser.id),
-      }
-    : null;
-
   const [visMetadata, _setVisMetadata] = useState(queryData);
-  const [isDirty, _setIsDirty] = useState(false);
   const [code, setCode] = useState("");
-  const isDirtyRef = useRef(false);
   const saveCodeTimeout = useRef(null);
 
   const dispatch = useDispatch();
-
-  const setIsDirty = useCallback((value) => {
-    isDirtyRef.current = value;
-    _setIsDirty(value);
-  }, []);
-
   const [changeVisMetadata, mutationData] = useMutation(CHANGE_VISUAL, {
     variables: { where: { id: visID } },
-    onCompleted: () => setIsDirty(false),
   });
 
   function setDocsVisibility(input) {
@@ -96,6 +61,41 @@ export default function MainView({ visID, queryData }) {
     changeVisMetadata({ variables: { data: { extensions: input } } });
   }
 
+  const seedDocument = useCallback(async () => {
+    if (visMetadata?.yjsState) return;
+
+    // Initial seeding:
+    const ydoc = provider.document;
+    const ycode = ydoc.getText("code");
+
+    if (ycode.length === 0) {
+      console.log("Seeding code from the backend");
+      const response = await fetchCode(visMetadata?.code?.url);
+      ycode.insert(0, response);
+    }
+
+    const ytiptap = ydoc.getXmlFragment("docs");
+    if (ytiptap.length === 0) {
+      if (visMetadata?.docs) {
+        console.log("Seeding docs from the backend");
+        prosemirrorJSONToYXmlFragment(
+          getSchema(extensions),
+          visMetadata?.docs,
+          ytiptap,
+        );
+      }
+    }
+  }, [provider, visMetadata]);
+
+  useHocuspocusEvent("synced", ({ state }) => {
+    console.log("Websocket synced", state);
+    seedDocument();
+  });
+
+  useEffect(() => {
+    if (provider?.isSynced) seedDocument();
+  }, [provider, seedDocument]);
+
   useEffect(() => {
     _setVisMetadata(queryData);
   }, [queryData]);
@@ -103,6 +103,25 @@ export default function MainView({ visID, queryData }) {
   useEffect(() => {
     if (visMetadata?.parameters) {
       dispatch({ type: "params/load", payload: visMetadata.parameters });
+    }
+
+    const ycode = provider.document.getText("code");
+
+    const observer = () => {
+      console.log("Code change from ytext");
+      setCode(ycode.toString());
+    };
+
+    ycode.observe(observer);
+
+    provider.setAwarenessField("user", {
+      name: currentUser?.username,
+      userID: currentUser?.id,
+      color: userColor(currentUser?.id),
+    })
+
+    return () => {
+      ycode.unobserve(observer);
     }
   }, []);
 
@@ -112,7 +131,6 @@ export default function MainView({ visID, queryData }) {
     setDocsVisibility,
     setExtensions,
     setPopupVisuals,
-    setIsDirty,
   };
 
   if (!isEditable && visMetadata?.privacy === "private") {
@@ -124,42 +142,30 @@ export default function MainView({ visID, queryData }) {
   }
 
   return (
-    <HocuspocusProviderWebsocketComponent url={collabEndpoint}>
-      <HocuspocusRoom name={`yqPresence:${visID}`}>
-        <SetAwarenessUser
-          user={awarenessUser}
-          currentView={currentScreen.left}
-        />
-      </HocuspocusRoom>
-      <div className="h-100">
-        <VisTopBar
-          visMetadata={visMetadata}
-          isEditable={isEditable}
-          currentScreen={currentScreen}
-          setCurrentScreen={setCurrentScreen}
-          popupVisuals={popupVisuals}
-          setPopupVisuals={setPopupVisuals}
-          fullScreenHandle={fullScreenHandle}
-          mutationData={mutationData}
-          changeVisMetadata={changeVisMetadata}
-          isDirty={isDirty}
-          isPaused={isPaused}
-          setIsPaused={setIsPaused}
-        />
-        <VisualScreen
-          isEditable={isEditable}
-          visMetadata={visMetadata}
-          code={code}
-          isPaused={isPaused}
-          popupVisuals={popupVisuals}
-          currentScreen={currentScreen}
-          fullScreenHandle={fullScreenHandle}
-          setters={setters}
-          isDirty={isDirty}
-          isDirtyRef={isDirtyRef}
-          awarenessUser={awarenessUser}
-        />
-      </div>
-    </HocuspocusProviderWebsocketComponent>
+    <div className="h-100">
+      <VisTopBar
+        visMetadata={visMetadata}
+        isEditable={isEditable}
+        currentScreen={currentScreen}
+        setCurrentScreen={setCurrentScreen}
+        popupVisuals={popupVisuals}
+        setPopupVisuals={setPopupVisuals}
+        fullScreenHandle={fullScreenHandle}
+        mutationData={mutationData}
+        changeVisMetadata={changeVisMetadata}
+        isPaused={isPaused}
+        setIsPaused={setIsPaused}
+      />
+      <VisualScreen
+        isEditable={isEditable}
+        visMetadata={visMetadata}
+        code={code}
+        isPaused={isPaused}
+        popupVisuals={popupVisuals}
+        currentScreen={currentScreen}
+        fullScreenHandle={fullScreenHandle}
+        setters={setters}
+      />
+    </div>
   );
 }

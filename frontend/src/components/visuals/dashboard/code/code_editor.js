@@ -34,6 +34,7 @@ export function CodeEditor({ setCode, isEditable }) {
   }
 
   const provider = useHocuspocusProvider();
+  const users = useHocuspocusAwareness();
   const bindingRef = useRef(null);
   const cleanupRef = useRef(null);
 
@@ -42,18 +43,66 @@ export function CodeEditor({ setCode, isEditable }) {
   }, []);
 
   const handleMount = (editor) => {
-    const yText = provider.document.getText("monaco");
-    const observer = () => setCode(yText.toString());
-    yText.observe(observer);
+    
+
+    const styleEl = document.createElement("style");
+    document.head.appendChild(styleEl);
+
+    const updateRemoteCursorStyles = () => {
+      let rules = "";
+      provider.awareness.getStates().forEach((state, clientId) => {
+        const color = state?.user?.color;
+        if (!color) return;
+        rules += `
+          .yRemoteSelection-${clientId} {
+            background-color: ${color};
+            opacity: 0.2;
+          }
+          .yRemoteSelectionHead-${clientId} {
+            position: absolute;
+            border-left: ${color} solid 2px;
+            border-top: ${color} solid 2px;
+            border-bottom: ${color} solid 2px;
+            height: 100%;
+            box-sizing: border-box;
+          }
+          .yRemoteSelectionHead-${clientId}::after {
+            position: absolute;
+            top: -1.6em;
+            left: -2px;
+            content: "${state?.user?.name}";
+            background-color: ${color};
+            color: black;
+            border-radius: 4px;
+            border-radius: 0px;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            padding: 0.1rem 0.3rem;
+            user-select: none;
+            white-space: nowrap;
+          }
+        `;
+      });
+      styleEl.textContent = rules;
+    };
+
+    const yText = provider.document.getText("code");
+
+    provider.awareness.on("update", updateRemoteCursorStyles);
+    updateRemoteCursorStyles();
+
     bindingRef.current = new MonacoBinding(
       yText,
       editor.getModel(),
       new Set([editor]),
       provider.awareness,
     );
-    
+
     cleanupRef.current = () => {
-      yText.unobserve(observer);
+      provider.awareness.off("update", updateRemoteCursorStyles);
+      styleEl.remove();
       bindingRef.current?.destroy();
       bindingRef.current = null;
     };
@@ -65,7 +114,6 @@ export function CodeEditor({ setCode, isEditable }) {
       theme="vs-dark"
       defaultLanguage="javascript"
       options={settings}
-      // onChange={(value) => setCode(value)}
     />
   );
 }

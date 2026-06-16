@@ -4,8 +4,14 @@ import { useQuery } from "@apollo/client";
 import { MY_VISUALS } from "../../../queries/visuals";
 import MainView from "./main_view";
 import NoVisualScreen from "./no_visual_screen";
+import { HocuspocusProviderWebsocketComponent, HocuspocusRoom } from "@hocuspocus/provider-react";
 
 export { VisualScreen } from "./visual_screen";
+
+const collabEndpoint =
+  process.env.NODE_ENV === "development"
+    ? process.env.REACT_APP_COLLAB_ENDPOINT_DEV || "ws://localhost:3001/collab"
+    : process.env.REACT_APP_COLLAB_ENDPOINT;
 
 export function QueryMainView() {
   const { visID } = useParams();
@@ -22,5 +28,11 @@ export function QueryMainView() {
     return <NoVisualScreen />;
   }
 
-  return <MainView visID={visID} queryData={data?.visuals[0]} />;
+  return (
+    <HocuspocusProviderWebsocketComponent url={collabEndpoint}>
+      <HocuspocusRoom name={`visual:${visID}`}>
+        <MainView visID={visID} queryData={data?.visuals[0]} />
+      </HocuspocusRoom>
+    </HocuspocusProviderWebsocketComponent>
+  );
 }

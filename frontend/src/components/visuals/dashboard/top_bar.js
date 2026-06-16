@@ -16,7 +16,6 @@ export function VisTopBar({
   changeVisMetadata,
   isEditable,
   isPaused,
-  isDirty,
   setIsPaused,
 }) {
   const [showEdit, setShowEdit] = useState(false);
@@ -104,9 +103,9 @@ export function VisTopBar({
         </div>
       </div>
       <div className="d-flex justify-content-end align-items-center">
-        {isEditable && (
+        {/*isEditable && (
           <ShowUploadState mutationData={mutationData} isDirty={isDirty} />
-        )}
+        )*/}
         <button className="btn btn-link" onClick={() => setIsPaused(!isPaused)}>
           <span className="material-symbols-outlined inline-icon">
             {isPaused ? "play_arrow" : "pause"}

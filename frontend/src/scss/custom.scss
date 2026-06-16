@@ -19,9 +19,20 @@ $h5-font-weight: 600;
 $h6-font-weight: 600;
 
 $enable-negative-margins: true;
-$font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto,
-  "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif,
-  "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+$font-family-sans-serif:
+  system-ui,
+  -apple-system,
+  "Segoe UI",
+  Roboto,
+  "Helvetica Neue",
+  "Noto Sans",
+  "Liberation Sans",
+  Arial,
+  sans-serif,
+  "Apple Color Emoji",
+  "Segoe UI Emoji",
+  "Segoe UI Symbol",
+  "Noto Color Emoji";
 
 // Gray colors
 $white: #fff;
@@ -72,8 +83,8 @@ $h6-font-size: $font-size-base;
 
 $enable-validation-icons: false;
 
-$font-family-sans-serif: Inter, "Inter", "Helvetica Neue", Arial, Helvetica,
-  sans-serif;
+$font-family-sans-serif:
+  Inter, "Inter", "Helvetica Neue", Arial, Helvetica, sans-serif;
 
 :root {
   --bs-border-radius: 0rem;
@@ -247,8 +258,6 @@ div.w-10px {
   z-index: 102;
 }
 
-
-
 $popover-bg: rgba(255, 255, 255);
 $popover-header-bg: rgba(255, 255, 255);
 $popover-border-color: $gray-200;
@@ -395,6 +404,32 @@ $popover-border-color: $gray-200;
     margin: 1.5rem 0;
     padding: 0.75rem 1rem;
   }
+
+  .collaboration-carets__caret {
+    border-left: 1px solid #0d0d0d;
+    border-right: 1px solid #0d0d0d;
+    margin-left: -1px;
+    margin-right: -1px;
+    pointer-events: none;
+    position: relative;
+    word-break: normal;
+  }
+
+  /* Render the username above the caret */
+  .collaboration-carets__label {
+    border-radius: 0px;
+    color: #0d0d0d;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 600;
+    left: -1px;
+    line-height: normal;
+    padding: 0.1rem 0.3rem;
+    position: absolute;
+    top: -1.4em;
+    user-select: none;
+    white-space: nowrap;
+  }
 }
 
 .btn-docs-vis {
@@ -484,7 +519,6 @@ $popover-border-color: $gray-200;
     max-width: 10%;
   }
 }
-
 
 .width-256px {
   width: 256px !important;
@@ -1187,8 +1221,6 @@ canvas {
   }
 }
 
-
-
 .mt-n01 {
   margin-top: -1px;
 }
@@ -1366,6 +1398,19 @@ input.vis-name-input::placeholder {
   padding-right: 50vw;
   margin-left: -50vw;
   margin-right: -50vw;
+}
+
+.yRemoteSelection {
+  background-color: rgb(250, 129, 0, 0.5);
+}
+
+.yRemoteSelectionHead {
+  position: absolute;
+  border-left: orange solid 2px;
+  border-top: orange solid 2px;
+  border-bottom: orange solid 2px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 // Lessons SCSS Code
@@ -1575,8 +1620,6 @@ input.vis-name-input::placeholder {
   }
 }
 
-
-
 .ai-input-textbox {
   background: none !important;
   color: $white !important;
@@ -1596,7 +1639,6 @@ input.vis-name-input::placeholder {
     outline: none !important;
   }
 }
-
 
 .ai-ref-input {
   color: $white !important;
@@ -1644,7 +1686,6 @@ input.vis-name-input::placeholder {
   left: 100%;
   margin-left: 0.25rem;
 }
-
 
 .h-75vh {
   height: 75vh;
@@ -1722,8 +1763,6 @@ input.vis-name-input::placeholder {
     font-size: 1rem !important;
   }
 }
-
-
 
 // General variables
 
