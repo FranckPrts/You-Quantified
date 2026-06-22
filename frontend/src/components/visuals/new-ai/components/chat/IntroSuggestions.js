@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { MY_VISUALS } from "../../../../../queries/visuals";
 import { DisplayVisResult } from "../references";
 import { motion } from "motion/react";

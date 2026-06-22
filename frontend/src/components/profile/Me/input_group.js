@@ -5,7 +5,7 @@ import {
   CHECK_REPEATED_USER,
   CHANGE_USERNAME,
 } from "../../../queries/user";
-import { useLazyQuery, useMutation } from "@apollo/client";
+import { useLazyQuery, useMutation } from "@apollo/client/react";
 import { useState } from "react";
 
 export function MyUsernameButtonGroup({ userData }) {

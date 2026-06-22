@@ -6,7 +6,7 @@ import {
   CHECK_REPEATED_USER,
   REGISTER_USER,
 } from "../../queries/user";
-import { useMutation, useQuery, useLazyQuery } from "@apollo/client";
+import { useMutation, useQuery, useLazyQuery } from "@apollo/client/react";
 import { useContext } from "react";
 import { UserContext } from "../../App";
 import { useSearchParams, Navigate, Link } from "react-router-dom";

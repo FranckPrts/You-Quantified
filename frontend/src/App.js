@@ -9,7 +9,7 @@ import MobileUnavaiabilityScreen from "./components/mobile";
 import HomePage from "./components/home/main";
 import Login from "./components/login/main";
 import SignUp from "./components/login/signup";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { AUTH_USER } from "./queries/user";
 import { NewVisual } from "./components/visuals/menu/new";
 import { AINewVisual } from "./components/visuals/new-ai/main";

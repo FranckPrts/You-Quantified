@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import clsx from "clsx";
 import { useOutsideAlerter } from "../../../../../utility/outsideClickDetection";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_AI_HISTORY } from "../../../../../queries/genAI";
 import { useNavigate, useSearchParams } from "react-router-dom";
 

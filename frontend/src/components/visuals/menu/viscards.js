@@ -1,7 +1,7 @@
 import { React, useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import p5logo from "../../../assets/p5logo.png";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { ShareMenu } from "./share";
 import { useOutsideAlerter } from "../../../utility/outsideClickDetection";
 import {

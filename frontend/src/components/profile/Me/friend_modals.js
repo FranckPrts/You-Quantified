@@ -1,4 +1,4 @@
-import { useLazyQuery } from "@apollo/client";
+import { useLazyQuery } from "@apollo/client/react";
 import { useEffect, useState } from "react";
 import { FriendRequestCard } from "../friend_request_card";
 import { GET_USER_DATA } from "../../../queries/friends";

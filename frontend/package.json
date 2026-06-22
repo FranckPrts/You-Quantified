@@ -35,7 +35,7 @@
     "@tiptap/react": "^3.26.1",
     "@tiptap/starter-kit": "^3.26.1",
     "@tiptap/y-tiptap": "^3.0.5",
-    "apollo-upload-client": "^18.0.1",
+    "apollo-upload-client": "^19.0.0",
     "boo": "^2.0.0",
     "bootstrap": "^5.3.5",
     "bootstrap-icons": "^1.11.3",

@@ -2,7 +2,7 @@ import { useContext, useLayoutEffect, useState, useRef } from "react";
 import { UserContext } from "../../../App";
 import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { profanity } from "@2toad/profanity";
 import {
   MY_VISUALS,

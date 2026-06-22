@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../../../App";
 import { MyUserName } from "./username";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_ALL_TAGS } from "../../../queries/visuals";
 export function MainMenu() {
   const { currentUser } = useContext(UserContext);

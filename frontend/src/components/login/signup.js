@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { useLazyQuery, useMutation } from "@apollo/client";
+import { useLazyQuery, useMutation } from "@apollo/client/react";
 import {
   CHECK_REPEATED_USER,
   REGISTER_USER,

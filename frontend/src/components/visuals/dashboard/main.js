@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { MY_VISUALS } from "../../../queries/visuals";
 import MainView from "./main_view";
 import NoVisualScreen from "./no_visual_screen";

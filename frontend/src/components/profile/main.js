@@ -3,7 +3,7 @@ import { UserContext } from "../../App";
 import { useParams } from "react-router-dom";
 
 import { GET_FRIENDS, GET_USER_DATA } from "../../queries/friends";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { Link } from "react-router-dom";
 import { MyUserPage } from "./Me/main";
 import { FriendPage } from "./Friends/main";

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { useDispatch } from "react-redux";
 import { fetchCode } from "../utility/fetch_code";
 import { CHANGE_VISUAL } from "../../../queries/visuals";

@@ -5,7 +5,7 @@ import { useOutsideAlerter } from "../../../utility/outsideClickDetection";
 
 import { useState, useRef, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 
 import { DELETE_REQUEST, GET_FRIENDS } from "../../../queries/friends";
 import { END_SESSION } from "../../../queries/user";

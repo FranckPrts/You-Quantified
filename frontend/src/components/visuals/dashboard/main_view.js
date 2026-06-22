@@ -10,7 +10,7 @@ import { VisTopBar } from "./top_bar";
 import { VisualScreen } from "./visual_screen";
 import { UserContext } from "../../../App";
 import { useDispatch } from "react-redux";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { CHANGE_VISUAL } from "../../../queries/visuals";
 import {
   HocuspocusRoom,

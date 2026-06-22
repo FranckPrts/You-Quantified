@@ -2,7 +2,7 @@ import { MyUserName } from "./username";
 import { useContext, useState } from "react";
 import { UserContext } from "../../../App";
 import { profanity } from "@2toad/profanity";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { NEW_VISUAL } from "../../../queries/visuals";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
