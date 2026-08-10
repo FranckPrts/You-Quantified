@@ -7,6 +7,22 @@ const initialState = {
   update: { type: "none" },
 };
 
+
+function initialParamState(name) {
+  const stored = sessionStorage.getItem(`mapping_${name}`);
+  let mapping = "Manual";
+  let hasUserSelected = false;
+  if (stored) {
+    try {
+      mapping = JSON.parse(stored);
+      hasUserSelected = true;
+    } catch (e) {
+      // invalid data, ignore
+    }
+  }
+  return { value: 0, mapping, range: [0, 1], hasUserSelected };
+}
+
 // React Redux Store to manage the data that moves throghout the entire app
 function rootReducer(state = initialState, action) {
   switch (action.type) {
@@ -23,30 +39,23 @@ function rootReducer(state = initialState, action) {
         },
       };
 
-    case "params/load":
-      // Logic to handle initializing parameters
+    case "params/sync": {
+      const names = action.payload.map(({ name }) => name);
+      const current = Object.keys(state.params);
 
-      let loadedParams = action.payload.reduce((acc, obj) => {
-        const storageKey = `mapping_${obj.name}`;
-        const stored = sessionStorage.getItem(storageKey);
-        let mapping = "Manual";
-        let hasUserSelected = false;
-        if (stored) {
-          try {
-            mapping = JSON.parse(stored);
-            hasUserSelected = true;
-          } catch (e) {
-            // invalid data, ignore
-          }
-        }
-        acc[obj.name] = { value: 0, mapping, range: [0, 1], hasUserSelected };
-        return acc;
-      }, {});
+      const unchanged =
+        names.length === current.length &&
+        names.every((name) => name in state.params);
+      if (unchanged) return state;
 
       return {
         ...state,
-        params: loadedParams,
+        params: names.reduce((acc, name) => {
+          acc[name] = state.params[name] ?? initialParamState(name);
+          return acc;
+        }, {}),
       };
+    }
 
     case "params/updateMappings": {
       const paramName = action.payload.name;
@@ -72,20 +81,6 @@ function rootReducer(state = initialState, action) {
         },
       };
     }
-
-    case "params/create":
-      return {
-        ...state,
-        params: {
-          ...state.params,
-          [action.payload.name]: {
-            value: 0,
-            mapping: "Manual",
-            range: [0, 1],
-            hasUserSelected: false,
-          },
-        },
-      };
 
     case "params/updateRange":
       return {

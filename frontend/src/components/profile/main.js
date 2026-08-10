@@ -51,15 +51,13 @@ export function User() {
 }
 
 function QueryUserAuthenticatedPage({ currentUserID }) {
-  const { data, loading, error } = useQuery(GET_FRIENDS, {
+  const { data, dataState, error } = useQuery(GET_FRIENDS, {
     variables: { userID: currentUserID },
     pollInterval: 500,
   });
 
-  console.log(error);
-
-  if (loading) return <div>Loading profile</div>;
   if (error) return <div>Error!</div>;
+  if (dataState === "empty") return <div>Loading profile</div>;
 
   return <UserAuthenticatedPage rawMyFriends={data.friendships} />;
 }
@@ -74,14 +72,12 @@ function UserAuthenticatedPage({ rawMyFriends }) {
     [rawMyFriends, currentUser]
   );
 
-  const { data, loading, error } = useQuery(GET_USER_DATA, {
+  const { data, dataState, error } = useQuery(GET_USER_DATA, {
     variables: { userID },
   });
 
   const currentFriendship =
     myFriends.find((friend) => friend.id === userID) || {};
-
-  if (loading) return <div>Loading profile</div>;
 
   if (error || data?.profiles.length === 0) {
     return (
@@ -90,6 +86,8 @@ function UserAuthenticatedPage({ rawMyFriends }) {
       </div>
     );
   }
+
+  if (dataState === "empty") return <div>Loading profile</div>;
 
   if (isCurrentUser) {
     return <MyUserPage userData={currentUser} myFriends={myFriends} />;

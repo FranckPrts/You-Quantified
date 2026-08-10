@@ -257,8 +257,6 @@ export default function DocsWindow({
   const provider = useHocuspocusProvider();
   const status = useHocuspocusConnectionStatus();
   const users = useHocuspocusAwareness();
-  console.log("yJS Users");
-  console.log(users);
 
   const editor = useEditor({
     extensions: [
@@ -284,7 +282,7 @@ export default function DocsWindow({
   useOutsideAlerter(linkPopupRef, setIsAddingLink);
 
   return (
-    <div>
+    <div className="d-flex flex-column h-100 overflow-clip">
       {isEditable && (
         <div className="d-flex flex-column docs">
           <MenuBar editor={editor} setIsAddingLink={setIsAddingLink} />

@@ -59,7 +59,7 @@ function DesktopApp() {
   const processingVideoRef = useRef(null); // Hidden video for face detection
 
   return (
-    <>
+    <div className="h-100 d-flex flex-column">
       <NavBar
         setShowDevices={setShowDevices}
         recording={recording}
@@ -98,7 +98,7 @@ function DesktopApp() {
           <Route path="/" element={<HomePage />} />
         </Routes>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -108,7 +108,7 @@ export default function App() {
   ) : (
     <DesktopApp />
   );
-  const { data, loading, error } = useQuery(AUTH_USER);
+  const { data, dataState, error } = useQuery(AUTH_USER);
 
   const [currentUser, setCurrentUser] = useState();
 
@@ -122,7 +122,8 @@ export default function App() {
     setCurrentUser({ ...data?.authenticatedItem, isAdmin });
   }, [data]);
 
-  if (loading) return <div></div>;
+
+  if (dataState === "empty" && !error) return <div></div>;
 
   return (
     <UserContext.Provider value={{ currentUser, setCurrentUser }}>

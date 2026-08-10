@@ -16,13 +16,14 @@ const collabEndpoint =
 export function QueryMainView() {
   const { visID } = useParams();
 
-  const { loading, error, data } = useQuery(MY_VISUALS, {
+  const { dataState, error, data } = useQuery(MY_VISUALS, {
     variables: { where: { id: { equals: visID } } },
     // fetchPolicy: "network-only",
   });
 
   if (error) return `Error! ${error.message}`;
-  if (loading) return "Loading...";
+
+  if (dataState === "empty") return "Loading...";
 
   if (data?.visuals?.length === 0) {
     return <NoVisualScreen />;

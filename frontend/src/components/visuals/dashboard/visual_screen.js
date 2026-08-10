@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import CodePane from "./code/code_editor";
 import DataManagementWindow from "./data mappings/main";
@@ -9,22 +9,7 @@ import SplitPane, {
   SplitPaneRight,
   Divider,
 } from "../../../utility/SplitPane";
-import {
-  HocuspocusRoom,
-  useHocuspocusProvider,
-} from "@hocuspocus/provider-react";
-import { SetAwarenessUser } from "./main_view";
 
-function CodeObserver({ setCode }) {
-  const provider = useHocuspocusProvider();
-  useEffect(() => {
-    const yText = provider.document.getText("monaco");
-    const observer = () => setCode(yText.toString());
-    yText.observe(observer);
-    return () => yText.unobserve(observer);
-  }, []);
-  return null;
-}
 export function VisualScreen({
   visMetadata,
   code,
@@ -53,7 +38,6 @@ export function VisualScreen({
   return (
     <SplitPane className="split-pane-row">
       <SplitPaneLeft show={`${showDashboard}`}>
-        <CodeObserver setCode={setters.setCode} />
         {currentScreen.left === "code" && (
           <CodePane
             visName={visName}

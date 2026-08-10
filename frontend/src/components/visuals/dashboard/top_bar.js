@@ -1,9 +1,9 @@
-import { useState, useRef, useContext } from "react";
+import { useState, useRef, useContext, useEffect } from "react";
 import { useOutsideAlerter } from "../../../utility/outsideClickDetection";
 import { useSearchParams } from "react-router-dom";
 import { UserContext } from "../../../App";
 import { EditModalManager } from "./edit";
-import { ShareMenu } from "../menu/share";
+import { ShareMenu } from "./share";
 
 export function VisTopBar({
   visMetadata,
@@ -15,6 +15,7 @@ export function VisTopBar({
   mutationData,
   changeVisMetadata,
   isEditable,
+  isOwner,
   isPaused,
   setIsPaused,
 }) {
@@ -91,6 +92,8 @@ export function VisTopBar({
                 visMetadata={visMetadata}
                 setShowEdit={setShowEdit}
                 changeVisMetadata={changeVisMetadata}
+                isEditable={isEditable}
+                isOwner={isOwner}
               />
             </div>
           </div>
@@ -119,7 +122,7 @@ export function VisTopBar({
             <i className="bi bi-window" alt="popup-window"></i>
           </b>
         </button>
-        {isEditable && (
+        {isOwner && (
           <PrivacyDropdown
             currentPrivacy={currentPrivacy}
             setCurrentPrivacy={setCurrentPrivacy}
@@ -154,8 +157,11 @@ export function VisTopBar({
           <div className="edit-background">
             <div className="edit-popup" ref={sharePopupRef}>
               <ShareMenu
+                visMetadata={visMetadata}
                 visURL={window.location.href}
                 setShowShare={setShowShare}
+                changeVisMetadata={changeVisMetadata}
+                isOwner={isOwner}
               />
             </div>
           </div>
@@ -268,7 +274,7 @@ function PrivacyDropdown({
             <span className="material-symbols-outlined me-3">lock</span>
             <div>
               <h6 className="m-0">Private</h6>
-              <small>Only you can see it.</small>
+              <small>Only those with edit access can see it.</small>
             </div>
           </button>
         </li>

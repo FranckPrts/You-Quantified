@@ -17,12 +17,14 @@ export default function AIDataManagementWindow({
   setIsDashboard,
 }) {
   const parameters = useSelector((state) => state.params);
-  const selectorKeys = Object.keys(parameters);
-  const visInfoKeys = visInfo?.parameters.map(({ name }) => name);
+  const visInfoKeys = visInfo?.parameters?.map(({ name }) => name);
 
-  if (JSON.stringify(selectorKeys) != JSON.stringify(visInfoKeys)) {
-    console.log("settingDashboard to false");
+  // Same set comparison as the dashboard's DataManagementWindow — see there.
+  const inSync =
+    visInfoKeys?.length === Object.keys(parameters).length &&
+    visInfoKeys.every((name) => name in parameters);
 
+  if (!inSync) {
     return (
       <div className="d-flex h-100 w-100 align-items-center justify-content-center">
         Loading...

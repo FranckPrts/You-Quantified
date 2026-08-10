@@ -44,6 +44,7 @@ export function AddNewFriendModal({ userData, myFriends, setShowAddModal }) {
   const [foundFriendship, setFoundFriendship] = useState();
   const [searchFriend, { data, loading, error: queryError }] =
     useLazyQuery(GET_USER_DATA);
+    
   const searchData = data?.profiles?.[0];
 
   useEffect(() => {

@@ -455,8 +455,9 @@ $popover-border-color: $gray-200;
 }
 
 .scrollable-editor {
-  overflow: scroll;
-  height: calc(100vh - 160px);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .w-btn {
@@ -663,9 +664,11 @@ canvas {
 }
 
 .hv-100 {
-  height: 100%;
-  padding-bottom: 60px;
+  height: calc(100% - 60px);
+  // overflow: hidden;
+  // padding-bottom: 60px;
 }
+
 
 .hv-50 {
   height: 500px;
@@ -1333,13 +1336,17 @@ input.vis-name-input::placeholder {
 
 .split-pane-row {
   width: 100vw;
-  height: calc(100% - 40px);
+  height: calc(100% - 60px);
   display: flex;
   flex-direction: row;
 }
 
 .w-double {
   width: 100px;
+}
+
+.overflow-clip {
+  overflow: clip;
 }
 
 .delete-btn:hover {
@@ -1358,7 +1365,7 @@ input.vis-name-input::placeholder {
 .split-pane-left {
   flex: 1;
   height: 100%;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .split-pane-right {

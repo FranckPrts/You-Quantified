@@ -18,13 +18,21 @@ import {
   useHocuspocusEvent,
 } from "@hocuspocus/provider-react";
 import { fetchCode } from "../utility/fetch_code";
-import { prosemirrorJSONToYXmlFragment } from "@tiptap/y-tiptap";
+import {
+  prosemirrorJSONToYXmlFragment,
+  yXmlFragmentToProseMirrorRootNode,
+} from "@tiptap/y-tiptap";
 import { extensions } from "./docs/main";
 import { getSchema } from "@tiptap/core";
 import { userColor } from "../../../utility/user_colors";
 
+
+const SAVE_DEBOUNCE_MS = 5000;
+
+const docsToJSON = (fragment) =>
+  yXmlFragmentToProseMirrorRootNode(fragment, getSchema(extensions)).toJSON();
+
 export default function MainView({ visID, queryData }) {
-  // This function bridges the left pane (code editor/parameters) with the visualization
 
   const { currentUser } = useContext(UserContext);
   const [currentScreen, setCurrentScreen] = useState({
@@ -35,12 +43,16 @@ export default function MainView({ visID, queryData }) {
   const fullScreenHandle = useFullScreenHandle();
   const provider = useHocuspocusProvider();
 
-  const isEditable =
+  const isOwner =
     queryData?.author?.id === currentUser?.id || currentUser?.isAdmin;
+
+  const isEditable =
+    isOwner ||
+    queryData?.collaborators?.some(({ id }) => id == currentUser?.id);
 
   const [visMetadata, _setVisMetadata] = useState(queryData);
   const [code, setCode] = useState("");
-  const saveCodeTimeout = useRef(null);
+  const saveTimeout = useRef(null);
 
   const dispatch = useDispatch();
   const [changeVisMetadata, mutationData] = useMutation(CHANGE_VISUAL, {
@@ -92,6 +104,12 @@ export default function MainView({ visID, queryData }) {
     seedDocument();
   });
 
+  useHocuspocusEvent("authenticationFailed", ({ reason }) => {
+    console.warn("Collaboration unavailable — read-only fallback:", reason);
+    provider.configuration.websocketProvider.disconnect();
+    seedDocument();
+  });
+
   useEffect(() => {
     if (provider?.isSynced) seedDocument();
   }, [provider, seedDocument]);
@@ -100,30 +118,61 @@ export default function MainView({ visID, queryData }) {
     _setVisMetadata(queryData);
   }, [queryData]);
 
+
   useEffect(() => {
     if (visMetadata?.parameters) {
-      dispatch({ type: "params/load", payload: visMetadata.parameters });
+      dispatch({ type: "params/sync", payload: visMetadata.parameters });
+    }
+  }, [dispatch, visMetadata?.parameters]);
+
+  function backupToFields() {
+    const ydoc = provider.document;
+    const code = ydoc.getText("code").toString();
+
+    changeVisMetadata({
+      variables: {
+        data: {
+          code: { upload: new Blob([code], { type: "text/plain" }) },
+          docs: docsToJSON(ydoc.getXmlFragment("docs")),
+        },
+      },
+    });
+  }
+
+  useEffect(() => {
+    const ycode = provider.document.getText("code");
+    const ydocs = provider.document.getXmlFragment("docs");
+
+    function scheduleBackup(transaction) {
+      if (!isEditable || !transaction.local) return;
+      clearTimeout(saveTimeout.current);
+      saveTimeout.current = setTimeout(backupToFields, SAVE_DEBOUNCE_MS);
     }
 
-    const ycode = provider.document.getText("code");
-
-    const observer = () => {
-      console.log("Code change from ytext");
+    const onCode = (_event, transaction) => {
       setCode(ycode.toString());
+      scheduleBackup(transaction);
     };
+    const onDocs = (_events, transaction) => scheduleBackup(transaction);
 
-    ycode.observe(observer);
-
-    provider.setAwarenessField("user", {
-      name: currentUser?.username,
-      userID: currentUser?.id,
-      color: userColor(currentUser?.id),
-    })
+    ycode.observe(onCode);
+    ydocs.observeDeep(onDocs);
 
     return () => {
-      ycode.unobserve(observer);
-    }
-  }, []);
+      ycode.unobserve(onCode);
+      ydocs.unobserveDeep(onDocs);
+      clearTimeout(saveTimeout.current);
+    };
+  }, [provider, isEditable]);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    provider.setAwarenessField("user", {
+      name: currentUser.username,
+      userID: currentUser.id,
+      color: userColor(currentUser.id),
+    });
+  }, [provider, currentUser?.id, currentUser?.username]);
 
   const setters = {
     setCode,
@@ -146,6 +195,7 @@ export default function MainView({ visID, queryData }) {
       <VisTopBar
         visMetadata={visMetadata}
         isEditable={isEditable}
+        isOwner={isOwner}
         currentScreen={currentScreen}
         setCurrentScreen={setCurrentScreen}
         popupVisuals={popupVisuals}
