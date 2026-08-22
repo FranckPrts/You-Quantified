@@ -3,7 +3,7 @@ import { UserContext } from "../../App";
 import { useParams } from "react-router-dom";
 
 import { GET_FRIENDS, GET_USER_DATA } from "../../queries/friends";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { Link } from "react-router-dom";
 import { MyUserPage } from "./Me/main";
 import { FriendPage } from "./Friends/main";
@@ -51,15 +51,13 @@ export function User() {
 }
 
 function QueryUserAuthenticatedPage({ currentUserID }) {
-  const { data, loading, error } = useQuery(GET_FRIENDS, {
+  const { data, dataState, error } = useQuery(GET_FRIENDS, {
     variables: { userID: currentUserID },
     pollInterval: 500,
   });
 
-  console.log(error);
-
-  if (loading) return <div>Loading profile</div>;
   if (error) return <div>Error!</div>;
+  if (dataState === "empty") return <div>Loading profile</div>;
 
   return <UserAuthenticatedPage rawMyFriends={data.friendships} />;
 }
@@ -74,15 +72,18 @@ function UserAuthenticatedPage({ rawMyFriends }) {
     [rawMyFriends, currentUser]
   );
 
-  const { data, loading, error } = useQuery(GET_USER_DATA, {
+  const { data, dataState, error } = useQuery(GET_USER_DATA, {
     variables: { userID },
   });
 
   const currentFriendship =
     myFriends.find((friend) => friend.id === userID) || {};
 
+<<<<<<< HEAD
   if (loading) return <div>Loading profile</div>;
 
+=======
+>>>>>>> 2c9e30a0c3194b045dee9574ff531c3c3e500dd2
   if (error || data?.profiles.length === 0) {
     return (
       <div className="d-flex h-100 align-items-center justify-content-center">
@@ -90,6 +91,8 @@ function UserAuthenticatedPage({ rawMyFriends }) {
       </div>
     );
   }
+
+  if (dataState === "empty") return <div>Loading profile</div>;
 
   if (isCurrentUser) {
     return <MyUserPage userData={currentUser} myFriends={myFriends} />;

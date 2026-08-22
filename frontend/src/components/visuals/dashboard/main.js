@@ -1,187 +1,43 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { useFullScreenHandle } from "react-full-screen";
-import { useParams, useSearchParams } from "react-router-dom";
-import CodePane from "./code/code_editor";
-import DataManagementWindow from "./data mappings/main";
-import { VisualsWindow } from "./p5window/p5window";
-import { useQuery, useMutation, gql } from "@apollo/client";
-import { useDispatch } from "react-redux";
-import { fetchCode } from "../utility/fetch_code";
-import DocsWindow from "./docs/main";
-import { VisTopBar } from "./top_bar";
+import React from "react";
+import { useParams } from "react-router-dom";
+import { useQuery } from "@apollo/client/react";
+import { MY_VISUALS } from "../../../queries/visuals";
+import MainView from "./main_view";
+import NoVisualScreen from "./no_visual_screen";
+import { HocuspocusProviderWebsocketComponent, HocuspocusRoom } from "@hocuspocus/provider-react";
 
-// Fix names not appearing when in view mode
+export { VisualScreen } from "./visual_screen";
 
-import SplitPane, {
-  SplitPaneLeft,
-  SplitPaneRight,
-  Divider,
-} from "../../../utility/SplitPane";
-import { MY_VISUALS, CHANGE_VISUAL } from "../../../queries/visuals";
-import { UserContext } from "../../../App";
-
-export function VisualScreen({
-  visMetadata,
-  code,
-  popupVisuals,
-  currentScreen,
-  docsContent,
-  setters,
-  isEditable,
-  isDirty,
-  isDirtyRef,
-}) {
-  const fullScreenHandle = useFullScreenHandle();
-  const visName = visMetadata?.title;
-
-  const isDocsVisible = visMetadata?.docsVisible;
-
-  const [searchParams, setSearchParams] = useSearchParams();
-  const viewParam = searchParams.get("dashboard");
-
-  const showDashboard =
-    currentScreen.left !== "none" &&
-    (viewParam === "true" || viewParam === null);
-
-  return (
-    <SplitPane className="split-pane-row">
-      <SplitPaneLeft show={`${showDashboard}`}>
-        {currentScreen.left == "code" && (
-          <CodePane
-            visName={visName}
-            setCode={setters.setCode}
-            code={code}
-            isEditable={isEditable}
-            extensions={visMetadata?.extensions}
-            setExtensions={setters.setExtensions}
-            isDirtyRef={isDirtyRef}
-            setIsDirty={setters.setIsDirty}
-            setRemoteCode={setters.setRemoteCode}
-          />
-        )}
-        {currentScreen.left == "docs" && (
-          <DocsWindow
-            updateDocsData={setters.updateDocsData}
-            setDocsVisibility={setters.setDocsVisibility}
-            docsContent={docsContent}
-            isEditable={isEditable}
-            isDocsVisible={isDocsVisible}
-            isDirtyRef={isDirtyRef}
-            setIsDirty={setters.setIsDirty}
-          />
-        )}
-        <DataManagementWindow
-          visInfo={visMetadata}
-          custom={isEditable}
-          changeParameters={setters.changeParameters}
-          showDashboard={showDashboard}
-        />
-      </SplitPaneLeft>
-      <Divider />
-      <SplitPaneRight>
-        <VisualsWindow
-          code={code}
-          visMetadata={visMetadata}
-          fullScreenHandle={fullScreenHandle}
-          popupVisuals={popupVisuals}
-          setPopupVisuals={setters.setPopupVisuals}
-          extensions={visMetadata?.extensions}
-        />
-      </SplitPaneRight>
-    </SplitPane>
-  );
-}
+const collabEndpoint =
+  process.env.NODE_ENV === "development"
+    ? process.env.REACT_APP_COLLAB_ENDPOINT_DEV || "ws://localhost:3001/collab"
+    : process.env.REACT_APP_COLLAB_ENDPOINT;
 
 export function QueryMainView() {
   const { visID } = useParams();
 
-  const { loading, error, data } = useQuery(MY_VISUALS, {
+  const { dataState, error, data } = useQuery(MY_VISUALS, {
     variables: { where: { id: { equals: visID } } },
     // fetchPolicy: "network-only",
   });
 
   if (error) return `Error! ${error.message}`;
-  if (loading) return "Loading...";
+
+  if (dataState === "empty") return "Loading...";
 
   if (data?.visuals?.length === 0) {
     return <NoVisualScreen />;
   }
 
-  return <MainView visID={visID} queryData={data?.visuals[0]} />;
-}
-
-function NoVisualScreen() {
-  const konamiCode = [
-    "ArrowUp",
-    "ArrowUp",
-    "ArrowDown",
-    "ArrowDown",
-    "ArrowLeft",
-    "ArrowRight",
-    "ArrowLeft",
-    "ArrowRight",
-    "b",
-    "a",
-  ];
-
-  const [konamiIndex, setKonamiIndex] = useState(0);
-  const [isDino, setIsDino] = useState(false);
-
-  const konamiIndexRef = useRef(konamiIndex);
-  konamiIndexRef.current = konamiIndex;
-
-  function konamiCodeFunc(event, konamiIndexRef) {
-    // Check if the key pressed matches the current konami sequence key
-    if (event.key === konamiCode[konamiIndexRef.current]) {
-      setKonamiIndex((prevIndex) => prevIndex + 1);
-      // If the entire Konami code is successfully entered
-      if (konamiIndexRef.current + 1 === konamiCode.length) {
-        alert(
-          "Stranger, whoever you are, open this to find what will amaze you"
-        );
-        setIsDino(true);
-        setKonamiIndex(0); // Reset the index
-      }
-    } else {
-      // Reset the index if the key doesn't match
-      setKonamiIndex(0);
-    }
-  }
-
-  const dinoiFrame = (
-    <iframe width="500" height="400" src="https://dinosaurgame.app" />
-  );
-
-  useEffect(() => {
-    document.addEventListener("keydown", (event) =>
-      konamiCodeFunc(event, konamiIndexRef)
-    );
-
-    return () => {
-      document.removeEventListener("keydown", (event) =>
-        konamiCodeFunc(event, konamiIndexRef)
-      );
-    };
-  }, []);
-
   return (
-    <div className="h-100 w-100">
-      <div className="position-absolute top-50 start-50 translate-middle">
-        <h4 className="text-center">Error 404</h4>
-        <p>This visual doesn't seem to exist :(</p>
-        {isDino && dinoiFrame}
-        {konamiIndex > 2 && <p>?</p>}
-        {konamiIndex > 5 && <p>??</p>}
-      </div>
-    </div>
+    <HocuspocusProviderWebsocketComponent url={collabEndpoint}>
+      <HocuspocusRoom name={`visual:${visID}`}>
+        <MainView visID={visID} queryData={data?.visuals[0]} />
+      </HocuspocusRoom>
+    </HocuspocusProviderWebsocketComponent>
   );
 }
+<<<<<<< HEAD
 
 function MainView({ visID, queryData }) {
   // This function bridges the left pane (code editor/parameters) with the visualization
@@ -383,3 +239,5 @@ function createTextFileFromString(text, filename) {
   // Create a new File object from the Blob
   return blob;
 }
+=======
+>>>>>>> 2c9e30a0c3194b045dee9574ff531c3c3e500dd2

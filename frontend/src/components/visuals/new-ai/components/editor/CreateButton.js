@@ -1,4 +1,4 @@
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
 import { NEW_VISUAL } from "../../../../../queries/visuals";
 import { UserContext } from "../../../../../App";
@@ -34,7 +34,7 @@ function CreateButton({ isDisabled, visualMetaAI }) {
           id: currentUser?.id,
         },
       },
-      genAI: {
+      yqGenAI: {
         connect: {
           langGraphThread: searchParams.get("ai-thread")
         }

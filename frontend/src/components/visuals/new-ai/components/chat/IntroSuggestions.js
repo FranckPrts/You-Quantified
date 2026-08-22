@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@apollo/client";
-import { MY_VISUALS } from "../../../../../queries/visuals";
+import { useQuery } from "@apollo/client/react";
+import { VISUAL_CARDS } from "../../../../../queries/visuals";
 import { DisplayVisResult } from "../references";
 import { motion } from "motion/react";
 
@@ -9,9 +9,9 @@ import { motion } from "motion/react";
 function IntroSuggestions({ additionalReferences, addReference, removeReference }) {
   const {
     data: allFeaturedVisuals,
-    loading,
+    dataState,
     error,
-  } = useQuery(MY_VISUALS, {
+  } = useQuery(VISUAL_CARDS, {
     variables: {
       where: {
         privacy: { equals: "public" },
@@ -24,7 +24,7 @@ function IntroSuggestions({ additionalReferences, addReference, removeReference 
     return <div>Error loading featured visuals</div>;
   }
 
-  if (loading) {
+  if (dataState === "empty") {
     return <div>Loading featured visuals...</div>;
   }
 

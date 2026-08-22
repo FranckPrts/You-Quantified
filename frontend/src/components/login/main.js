@@ -6,16 +6,17 @@ import {
   CHECK_REPEATED_USER,
   REGISTER_USER,
 } from "../../queries/user";
-import { useMutation, useQuery, useLazyQuery } from "@apollo/client";
+import { useMutation, useQuery, useLazyQuery } from "@apollo/client/react";
 import { useContext } from "react";
 import { UserContext } from "../../App";
 import { useSearchParams, Navigate, Link } from "react-router-dom";
 import { Nav } from "react-bootstrap";
+import { User } from "../profile/main";
 
 export default function Login() {
   const { currentUser, setCurrentUser } = useContext(UserContext);
 
-  if (currentUser) {
+  if (currentUser?.id) {
     return (
       <div className="login-div mt-5 align-text-center">
         <LoggedInScreen
@@ -36,6 +37,7 @@ export function LoggedInScreen({ currentUser, setCurrentUser }) {
     },
   });
 
+  
   const [searchParams, setSearchParams] = useSearchParams();
   const redirectVisual = searchParams.get("visual");
   const redirectUser = searchParams.get("user");
@@ -43,9 +45,21 @@ export function LoggedInScreen({ currentUser, setCurrentUser }) {
   if (redirectVisual) {
     return <Navigate to={`/visuals/${redirectVisual}`} />;
   }
+
+
+
+  return <Navigate to={`/user/${currentUser?.id}`}/>
+  
+
+  /*
+  No longer redirects when logging in / out
   if (redirectUser) {
     return <Navigate to={`/user/${redirectUser}`} />;
+<<<<<<< HEAD
   }
+=======
+  }*/
+>>>>>>> 2c9e30a0c3194b045dee9574ff531c3c3e500dd2
 
   return (
     <div>
@@ -94,10 +108,16 @@ function LoginScreen({ setCurrentUser }) {
   let passwordInput;
 
   return (
-    <div>
+    <div className="w-100 h-100">
+      <div className="w-100 bg-warning d-flex align-items-center p-3 ps-4 pe-4">
+        <span className="material-symbols-outlined me-2">warning</span>
+        <p className="m-0">
+          If you made an account before March 16th, you will have to create a new one. To transfer your data, contact us at <a href="mailto:youquantified@nyu.edu">youquantified@nyu.edu</a>
+        </p>
+      </div>
       <div className="login-div mt-5">
         <div className="d-flex mb-4 align-items-center justify-content-between">
-          <h5 className="m-0 p-0">Log in</h5>
+          <h1 className="m-0 p-0 h5">Log in</h1>
           <Link to="/signup" className="btn btn-dark fw-medium">
             Sign up instead
           </Link>
@@ -145,7 +165,9 @@ function LoginScreen({ setCurrentUser }) {
             Submit
           </button>
         </form>
+        
       </div>
+
     </div>
   );
 }

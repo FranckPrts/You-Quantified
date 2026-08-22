@@ -3,7 +3,7 @@ import { useStream } from "@langchain/langgraph-sdk/react";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { CREATE_GEN_AI } from "../../../queries/genAI";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { UserContext } from "../../../App";
 import { Link } from "react-router-dom";
 

@@ -1,11 +1,13 @@
 import { MyUserName } from "./username";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { UserContext } from "../../../App";
 import { profanity } from "@2toad/profanity";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { NEW_VISUAL } from "../../../queries/visuals";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Popover from "react-bootstrap/Popover";
 
 const defaultCode = `
 windowResized = () => {
@@ -30,40 +32,56 @@ export function NewVisual() {
   const [initCode, setInitCode] = useState(false);
   const [visName, setVisName] = useState("");
   const [visDescription, setVisDescription] = useState("");
-  const [isParamsValid, setIsParamsValid] = useState(true);
-  const [errorMessage, setErrorMessage] = useState();
 
   const navigate = useNavigate();
 
-  let isFormValid = visName && visDescription && isParamsValid && !errorMessage;
-
   const [createNewVisual, { data, loading, error }] = useMutation(NEW_VISUAL);
-
   if (error) {
     console.log(JSON.stringify(error));
   }
 
-  function validateDescription(input) {
-    const regex = /^(?!.*[%$\-\/])[^\n\r]{1,1000}$/;
-    if (!regex.test(input) || profanity.exists(input)) {
-      setVisDescription("");
-      setErrorMessage("Invalid description");
-      return;
-    }
-    setVisDescription(input);
-    setErrorMessage();
+  // Validation is derived from the raw input values on every render, so the
+  // text the user typed always stays in state. We keep two separate buckets:
+  //   - `missing`: required fields that are still empty (incomplete, not wrong)
+  //   - `errors`:  fields the user has filled in but that fail validation
+  // Empty/whitespace is routed to `missing` before the regex runs, which is why
+  // the regexes no longer need the `(?!\s*$)` non-empty lookahead.
+  const nameRegex = /^(?!.*[%$\-\/])[^\n\r]{1,50}$/;
+  const descriptionRegex = /^(?!.*[%$\-\/])[^\n\r]{1,1000}$/;
+
+  const missing = [];
+  const errors = [];
+
+  if (visName.trim() === "") {
+    missing.push("Name");
+  } else if (!nameRegex.test(visName) || profanity.exists(visName)) {
+    errors.push("Invalid name");
   }
 
-  function validateName(input) {
-    const regex = /^(?!.*[%$\-\/])[^\n\r]{1,50}$/;
-    if (!regex.test(input) || profanity.exists(input)) {
-      setVisName("");
-      setErrorMessage("Invalid name");
-      return;
-    }
-    setVisName(input);
-    setErrorMessage();
+  if (visDescription.trim() === "") {
+    missing.push("Description");
+  } else if (
+    !descriptionRegex.test(visDescription) ||
+    profanity.exists(visDescription)
+  ) {
+    errors.push("Invalid description");
   }
+
+  allParams.forEach((param, idx) => {
+    const label = `Parameter ${idx + 1}`;
+    const name = param?.name ?? "";
+    if (name.trim() === "") {
+      missing.push(`${label} name`);
+    } else if (!nameRegex.test(name) || profanity.exists(name)) {
+      errors.push(`${label} has an invalid name`);
+    }
+    if (!validateCommaSeparatedList(param?.suggested ?? "")) {
+      errors.push(`${label} has an invalid suggested list`);
+    }
+  });
+
+  const isFormValid =
+    !loading && missing.length === 0 && errors.length === 0;
 
   function createNewParam() {
     const newItem = { name: "", suggested: "" };
@@ -122,13 +140,22 @@ export function NewVisual() {
           >
             <i className="bi bi-arrow-left-short"></i>Visuals
           </Link>
-          <h2 className="mt-0 mb-1 ">New visual</h2>
+          <h1 className="mt-0 mb-1 h2">New visual</h1>
           <p>
             Create a new P5.js visual from scratch or upload your code<br></br>
           </p>
         </div>
-        <h5>Information</h5>
-        <div className="input-group mb-2">
+        <h5 className="m-0">
+          Information{" "}
+          <span className="asterisk" aria-hidden="true">
+            *
+          </span>
+        </h5>
+        <p className="mb-2">
+          Write a name for your visual and a description to be shown on the
+          card.
+        </p>
+        <div className="input-group mb-1">
           <span className="input-group-text" id="basic-addon2">
             Name
           </span>
@@ -138,7 +165,8 @@ export function NewVisual() {
             placeholder="Visual name"
             aria-label="Visual name"
             autoComplete="off"
-            onChange={(e) => validateName(e.target.value)}
+            value={visName}
+            onChange={(e) => setVisName(e.target.value)}
           />
         </div>
         <div className="mb-4">
@@ -147,35 +175,45 @@ export function NewVisual() {
             className="form-control"
             placeholder="Please provide a short description"
             aria-label="Description"
-            onChange={(e) => validateDescription(e.target.value)}
+            value={visDescription}
+            onChange={(e) => setVisDescription(e.target.value)}
           />
         </div>
-        {errorMessage && <p className="text-warning">{errorMessage}</p>}
         <div className="mb-4">
-          <h5>Parameters</h5>
-          <div className="pb-2">
-            <button
-              onClick={createNewParam}
-              className="btn btn-link fs-5 mt-0 pt-0 pb-0"
-            >
-              <i className="bi bi-plus"></i>
-            </button>
-            Add parameters by name. Optionally, add suggested data streams as
-            comma sepparated values.
-          </div>
+          <h5 className="m-0">
+            Parameters{" "}
+            <span className="asterisk" aria-hidden="true">
+              *
+            </span>
+          </h5>
+          <p className="mb-2">
+            All parameters must have at least a name. Optionally, write a list
+            of suggested streams.
+          </p>
           {allParams.map((item, idx) => (
             <ParamItem
               myParam={item}
               idx={idx}
               setAllParams={setAllParams}
-              setIsParamsValid={setIsParamsValid}
               allParamsLength={allParams.length}
               key={idx}
             />
           ))}
+          <div className="pb-2 p-0">
+            <button
+              onClick={createNewParam}
+              className="btn btn-outline-primary p-2 mt-1"
+            >
+              <i className="bi bi-plus m-0"></i> Add
+            </button>
+          </div>
         </div>
         <div className="mb-4">
-          <h5>Code</h5>
+          <h5 className="m-0">Code</h5>
+          <p className="mb-2">
+            Leave it empty to start from scratch. If you have already created a
+            p5.js visual, you can upload your own code here.
+          </p>
           <input
             type="file"
             className="form-control"
@@ -185,15 +223,32 @@ export function NewVisual() {
           />
         </div>
         {loading && <p className="text-success">Creating visual...</p>}
-        <button
-          type="submit"
-          className={`btn btn-primary ${
-            (!isFormValid || loading) && "disabled"
-          }`}
-          onClick={handleFormSubmit}
-        >
-          Create visual
-        </button>
+        <div className="d-flex align-items-center gap-2">
+          <button
+            type="submit"
+            className="btn btn-primary"
+            onClick={handleFormSubmit}
+            disabled={!isFormValid}
+          >
+            Create visual
+          </button>
+          {errors.length > 0 && (
+            <StatusPopover
+              icon="error"
+              variant="danger"
+              title="Invalid input"
+              items={errors}
+            />
+          )}
+          {missing.length > 0 && (
+            <StatusPopover
+              icon="info"
+              variant="muted"
+              title="Required fields"
+              items={missing}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -232,24 +287,41 @@ async function handleFileUpload(e, setInitCode) {
   }
 }
 
-function ParamItem({
-  myParam,
-  setAllParams,
-  idx,
-  setIsParamsValid,
-  allParamsLength,
-}) {
-  const [myParamValid, _setMyParamValid] = useState(true);
 
-  function setMyParamValid(val) {
-    _setMyParamValid(val);
-    setIsParamsValid(val);
-  }
+function StatusPopover({ icon, variant, title, items }) {
+  const popover = (
+    <Popover className="rounded-0">
+      <Popover.Header as="h6" className={`rounded-0 text-${variant}`}>
+        {title}
+      </Popover.Header>
+      <Popover.Body>
+        <ul className="mb-0 ps-3">
+          {items.map((item, idx) => (
+            <li key={idx}>{item}</li>
+          ))}
+        </ul>
+      </Popover.Body>
+    </Popover>
+  );
 
-  useEffect(() => {
-    setIsParamsValid(false);
-  }, []);
+  return (
+    <OverlayTrigger
+      trigger={["hover", "focus"]}
+      placement="top"
+      overlay={popover}
+    >
+      <button
+        type="button"
+        className={`btn btn-link text-decoration-none p-0 d-inline-flex align-items-center text-${variant}`}
+        aria-label={title}
+      >
+        <span className="material-symbols-outlined">{icon}</span>
+      </button>
+    </OverlayTrigger>
+  );
+}
 
+function ParamItem({ myParam, setAllParams, idx, allParamsLength }) {
   function updateParams(value) {
     setAllParams((prevParams) => {
       const newParams = [...prevParams];
@@ -266,26 +338,6 @@ function ParamItem({
     });
   }
 
-  function updateName(e) {
-    if (!e.target.value) {
-      setIsParamsValid(false);
-      return;
-    }
-    setIsParamsValid(true);
-    updateParams({ name: e.target.value, suggested: myParam?.suggested });
-  }
-
-  function updateSuggested(e) {
-    const isValid = validateCommaSeparatedList(e.target.value);
-    setMyParamValid(isValid);
-    if (isValid) {
-      updateParams({
-        name: myParam?.name,
-        suggested: e.target.value,
-      });
-    }
-  }
-
   return (
     <div key={idx}>
       <div className="param-input">
@@ -293,14 +345,17 @@ function ParamItem({
           autoComplete="off"
           className="form-control col-name"
           placeholder="Name"
-          onChange={updateName}
+          value={myParam?.name ?? ""}
+          onChange={(e) => updateParams({ ...myParam, name: e.target.value })}
         ></input>
         <input
           className="form-control col-suggested"
           placeholder="Suggested (i.e. Alpha, Beta, Gamma)"
-          onChange={updateSuggested}
+          value={myParam?.suggested ?? ""}
+          onChange={(e) =>
+            updateParams({ ...myParam, suggested: e.target.value })
+          }
         ></input>
-
         <button
           className="btn btn-outline-danger fw-medium"
           onClick={deleteParameter}
@@ -309,11 +364,6 @@ function ParamItem({
           Delete
         </button>
       </div>
-      {!myParamValid && (
-        <p className="text-warning">
-          Invalid input for the suggested parameters.
-        </p>
-      )}
     </div>
   );
 }

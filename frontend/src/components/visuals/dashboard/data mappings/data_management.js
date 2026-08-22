@@ -43,12 +43,13 @@ function DataCard({
 
   const [showEditOverlay, setShowEditOverlay] = useState(false);
 
-  function changeSource(sourceName, paramName) {
+  function changeSource(sourceName, paramName, userSelected = false) {
     dispatch({
       type: "params/updateMappings",
       payload: {
         name: paramName,
         mapping: sourceName,
+        userSelected,
       },
     });
   }
@@ -226,8 +227,6 @@ export default function DataManagement({ changeParameters, visInfo, custom }) {
     />
   ));
 
-  const dispatch = useDispatch();
-
   function deleteParameter(paramName) {
     // Retrieve data from local storage and assign it to a new object
 
@@ -256,13 +255,6 @@ export default function DataManagement({ changeParameters, visInfo, custom }) {
 
     setValid(isParamValid);
     if (!isParamValid) return;
-
-    dispatch({
-      type: "params/create",
-      payload: {
-        name: newParamName,
-      },
-    });
 
     changeParameters([
       ...visInfo.parameters,

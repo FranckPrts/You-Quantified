@@ -2,10 +2,10 @@ import { useContext, useLayoutEffect, useState, useRef } from "react";
 import { UserContext } from "../../../App";
 import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { profanity } from "@2toad/profanity";
 import {
-  MY_VISUALS,
+  VISUAL_CARDS,
   DELETE_VISUAL,
   NEW_VISUAL,
 } from "../../../queries/visuals";
@@ -14,12 +14,14 @@ export function EditModalManager({
   visMetadata,
   setShowEdit,
   changeVisMetadata,
+  isEditable,
+  isOwner,
 }) {
   const { currentUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   const [createNewVisual, { data: copyData, error }] = useMutation(NEW_VISUAL, {
-    refetchQueries: [MY_VISUALS, "VisualsQuery"],
+    refetchQueries: [VISUAL_CARDS, "VisualCards"],
   });
 
   async function createVisualCopy() {
@@ -41,7 +43,7 @@ export function EditModalManager({
       code: {
         upload: codeBlob,
       },
-      // docs: visMetadata?.docs,
+      docs: visMetadata?.docs,
       extensions: visMetadata?.extensions,
     };
 
@@ -65,7 +67,7 @@ export function EditModalManager({
     return <SignInEditPopup />;
   }
 
-  if (currentUser.id !== visMetadata?.author?.id) {
+  if (!isEditable) {
     return <CopyEditPopup createVisualCopy={createVisualCopy} />;
   }
 
@@ -75,6 +77,7 @@ export function EditModalManager({
       setShowEdit={setShowEdit}
       changeVisMetadata={changeVisMetadata}
       createVisualCopy={createVisualCopy}
+      isOwner={isOwner}
     />
   );
 }
@@ -118,6 +121,7 @@ function EditScreen({
   setShowEdit,
   changeVisMetadata,
   createVisualCopy,
+  isOwner,
 }) {
   const textbox = useRef(null);
   const navigate = useNavigate();
@@ -125,19 +129,19 @@ function EditScreen({
   const [visCover, setVisCover] = useState();
   const [errorMessage, setErrorMessage] = useState();
   const [visDescription, setVisDescription] = useState(
-    visMetadata?.description
+    visMetadata?.description,
   );
 
   let isFormValid = visName && visDescription && !errorMessage;
 
   const [deleteVisual, { data: visualDeleted, loading, error }] = useMutation(
     DELETE_VISUAL,
-    { variables: { id: visMetadata?.id } }
+    { variables: { id: visMetadata?.id } },
   );
 
   function deleteButtonCallback() {
     const checkConfirmation = confirm(
-      "Are you sure you want to delete the current visual?"
+      "Are you sure you want to delete the current visual?",
     );
     if (checkConfirmation) {
       deleteVisual();
@@ -172,10 +176,12 @@ function EditScreen({
     if (!isFormValid) {
       return;
     }
-    const data = {
-      title: visName,
-      description: visDescription,
-    };
+
+    const data = { description: visDescription };
+
+    if (isOwner) {
+      data["title"] = visName;
+    }
 
     if (visCover) {
       data["cover"] = {
@@ -217,6 +223,12 @@ function EditScreen({
         </button>
         <h3 className="mb-3">Edit</h3>
       </div>
+      {!isOwner && (
+        <p className="text-body-tertiary">
+          Some fields are disabled. You must be the owner of the visual to take
+          certain actions.
+        </p>
+      )}
       <form onSubmit={handleFormSubmit}>
         <div className="mb-3">
           <label htmlFor="visualName" id="basic-addon2">
@@ -231,6 +243,7 @@ function EditScreen({
             autoComplete="off"
             onChange={(e) => validateName(e.target.value)}
             value={visName}
+            disabled={!isOwner}
           />
         </div>
         <div className="mb-3">
@@ -261,6 +274,7 @@ function EditScreen({
             className="btn btn-outline-danger"
             onClick={deleteButtonCallback}
             type="button"
+            disabled={!isOwner}
           >
             Delete visual
           </button>

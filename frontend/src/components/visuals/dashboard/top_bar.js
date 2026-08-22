@@ -1,9 +1,9 @@
-import { useState, useRef, useContext } from "react";
+import { useState, useRef, useContext, useEffect } from "react";
 import { useOutsideAlerter } from "../../../utility/outsideClickDetection";
 import { useSearchParams } from "react-router-dom";
 import { UserContext } from "../../../App";
 import { EditModalManager } from "./edit";
-import { ShareMenu } from "../menu/share";
+import { ShareMenu } from "./share";
 
 export function VisTopBar({
   visMetadata,
@@ -15,7 +15,9 @@ export function VisTopBar({
   mutationData,
   changeVisMetadata,
   isEditable,
-  isDirty
+  isOwner,
+  isPaused,
+  setIsPaused,
 }) {
   const [showEdit, setShowEdit] = useState(false);
   const editPopupRef = useRef(null);
@@ -90,16 +92,28 @@ export function VisTopBar({
                 visMetadata={visMetadata}
                 setShowEdit={setShowEdit}
                 changeVisMetadata={changeVisMetadata}
+                isEditable={isEditable}
+                isOwner={isOwner}
               />
             </div>
           </div>
         )}
-        <h5 className="align-self-center m-0 text-center ms-3 text-truncate">
-          {visMetadata?.title}
-        </h5>
+        <div className="m-0 ms-3 text-start">
+          <h1 className="small fw-normal m-0">Editor</h1>
+          <h2 className="h5 align-self-center m-0 text-truncate">
+            {visMetadata?.title}
+          </h2>
+        </div>
       </div>
       <div className="d-flex justify-content-end align-items-center">
-        {isEditable && <ShowUploadState mutationData={mutationData} isDirty={isDirty}/>}
+        {/*isEditable && (
+          <ShowUploadState mutationData={mutationData} isDirty={isDirty} />
+        )*/}
+        <button className="btn btn-link" onClick={() => setIsPaused(!isPaused)}>
+          <span className="material-symbols-outlined inline-icon">
+            {isPaused ? "play_arrow" : "pause"}
+          </span>
+        </button>
         <button
           className="btn btn-link"
           onClick={() => setPopupVisuals(!popupVisuals)}
@@ -108,7 +122,7 @@ export function VisTopBar({
             <i className="bi bi-window" alt="popup-window"></i>
           </b>
         </button>
-        {isEditable && (
+        {isOwner && (
           <PrivacyDropdown
             currentPrivacy={currentPrivacy}
             setCurrentPrivacy={setCurrentPrivacy}
@@ -143,8 +157,11 @@ export function VisTopBar({
           <div className="edit-background">
             <div className="edit-popup" ref={sharePopupRef}>
               <ShareMenu
+                visMetadata={visMetadata}
                 visURL={window.location.href}
                 setShowShare={setShowShare}
+                changeVisMetadata={changeVisMetadata}
+                isOwner={isOwner}
               />
             </div>
           </div>
@@ -257,7 +274,7 @@ function PrivacyDropdown({
             <span className="material-symbols-outlined me-3">lock</span>
             <div>
               <h6 className="m-0">Private</h6>
-              <small>Only you can see it.</small>
+              <small>Only those with edit access can see it.</small>
             </div>
           </button>
         </li>
@@ -270,7 +287,11 @@ function ShowUploadState({ mutationData, isDirty }) {
   const { loading, error } = mutationData;
   let statusText = "All changes saved";
 
+<<<<<<< HEAD
   if (isDirty) statusText = "Saving changes..."
+=======
+  if (isDirty) statusText = "Saving changes...";
+>>>>>>> 2c9e30a0c3194b045dee9574ff531c3c3e500dd2
   if (loading) statusText = "Saving changes…";
   if (error) statusText = "Error saving";
 

@@ -1,13 +1,13 @@
 import { React, useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import p5logo from "../../../assets/p5logo.png";
-import { useQuery, useMutation } from "@apollo/client";
-import { ShareMenu } from "./share";
+import { useQuery, useMutation } from "@apollo/client/react";
+import { ShareMenu } from "../dashboard/share";
 import { useOutsideAlerter } from "../../../utility/outsideClickDetection";
 import {
   LIKE_VISUAL,
   UNLIKE_VISUAL,
-  MY_VISUALS,
+  VISUAL_CARDS,
 } from "../../../queries/visuals";
 
 export function ImageCard({
@@ -117,7 +117,7 @@ function BottomBar({ visID, userID, likes }) {
       id: visID,
       userID: userID,
     },
-    // refetchQueries: [MY_VISUALS, 'VisualsQuery'],
+    // refetchQueries: [VISUAL_CARDS, 'VisualCards'],
     update(cache, { data, error }) {
       if (data?.updateVisual) {
         setIsLiked(!isLiked);
@@ -254,25 +254,27 @@ export function VisualizationCards({
           };
   }
 
-  const { loading, error, data } = useQuery(MY_VISUALS, {
+  const { error, data, previousData } = useQuery(VISUAL_CARDS, {
     variables: {
       where: whereValue,
     },
     fetchPolicy: "network-only",
   });
 
-  // if (loading) return <div className="custom-grid h-100 mb-5"><LoadingPlaceholder /></div>;
-  if (loading)
+  if (error) return <p>Error: {error.message}</p>;
+
+  const visualsData = data ?? previousData;
+
+  if (!visualsData)
     return (
       <div className="custom-grid h-100 mb-5 spinner-grow">
         {" "}
         <span className="visually-hidden">Loading...</span>
       </div>
     );
-  if (error) return <p>Error: {error.message}</p>;
 
   const sortedArray = sortVisuals(
-    data.visuals,
+    visualsData.visuals,
     currentSort.type,
     currentSort.isDescending
   );

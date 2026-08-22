@@ -11,6 +11,18 @@ export const AUTH_USER = gql`
           name
           canAccessAdminUI
         }
+<<<<<<< HEAD
+=======
+        studentIn {
+          id
+        }
+        teacherIn {
+          id
+        }
+        mentorIn {
+          id
+        }
+>>>>>>> 2c9e30a0c3194b045dee9574ff531c3c3e500dd2
       }
     }
   }

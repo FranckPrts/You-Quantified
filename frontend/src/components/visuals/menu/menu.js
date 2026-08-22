@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../../../App";
 import { MyUserName } from "./username";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_ALL_TAGS } from "../../../queries/visuals";
 export function MainMenu() {
   const { currentUser } = useContext(UserContext);
@@ -45,7 +45,7 @@ export function MainMenu() {
   return (
     <div className="h-100 center-margin overflow-scroll disable-scrollbar">
       <div className="align-items-start">
-        <h2 className="mt-5 mb-2 ">Visuals</h2>
+        <h1 className="mt-5 mb-2 h2">Visuals</h1>
         <p>
           Explore and modify our curated{" "}
           <a

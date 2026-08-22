@@ -1,4 +1,4 @@
-import { useLazyQuery } from "@apollo/client";
+import { useLazyQuery } from "@apollo/client/react";
 import { useEffect, useState } from "react";
 import { FriendRequestCard } from "../friend_request_card";
 import { GET_USER_DATA } from "../../../queries/friends";
@@ -44,6 +44,10 @@ export function AddNewFriendModal({ userData, myFriends, setShowAddModal }) {
   const [foundFriendship, setFoundFriendship] = useState();
   const [searchFriend, { data, loading, error: queryError }] =
     useLazyQuery(GET_USER_DATA);
+<<<<<<< HEAD
+=======
+    
+>>>>>>> 2c9e30a0c3194b045dee9574ff531c3c3e500dd2
   const searchData = data?.profiles?.[0];
 
   useEffect(() => {

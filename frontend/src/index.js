@@ -3,15 +3,16 @@ import ReactDOM from "react-dom/client";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import App from "./App";
 import "./index.scss";
-import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
-import createUploadLink from "apollo-upload-client/createUploadLink.mjs";
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client/react";
+import UploadHttpLink from "apollo-upload-client/UploadHttpLink.mjs";
 
 const uriEndpoint =
   process.env.NODE_ENV === "development"
     ? process.env.REACT_APP_UPLOAD_URI_ENDPOINT_DEV
     : process.env.REACT_APP_UPLOAD_URI_ENDPOINT;
 
-const link = createUploadLink({
+const link = new UploadHttpLink({
   uri: uriEndpoint, // Add a fix in the production using env variables
   credentials: "include",
   headers: {

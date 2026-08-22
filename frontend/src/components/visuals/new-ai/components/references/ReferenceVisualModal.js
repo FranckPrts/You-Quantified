@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { SEARCH_VISUALS } from "../../../../../queries/visuals";
 import DisplayVisResult from "./DisplayVisResult";
 

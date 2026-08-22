@@ -59,7 +59,7 @@ function RightPannel({ visualMetaAI, isLoading, isVerifying, setError }) {
 
   useEffect(() => {
     if (hasValidParams) {
-      dispatch({ type: "params/load", payload: visInfo?.parameters });
+      dispatch({ type: "params/sync", payload: visInfo?.parameters });
     }
   }, [visInfo]);
 
@@ -136,6 +136,7 @@ function RightPannel({ visualMetaAI, isLoading, isVerifying, setError }) {
             <CodePane
               visName={"AI-Generated Visual"}
               setCode={setCode}
+              setRemoteCode={setCode}
               code={code}
               isEditable={!isLoading || !isVerifying}
               extensions={extensions}

@@ -2,12 +2,25 @@ import Editor from "@monaco-editor/react";
 import downloadCode from "../../../../utility/code_download";
 import { useOutsideAlerter } from "../../../../utility/outsideClickDetection";
 import { useState, useRef, useEffect } from "react";
+import { ExtensionsModal } from "./extensions_modal";
+import { MonacoBinding } from "y-monaco";
+import {
+  useHocuspocusAwareness,
+  useHocuspocusProvider,
+  useHocuspocusConnectionStatus,
+} from "@hocuspocus/provider-react";
 
 // Code Editor Made Using monaco-editor/react
 // It has the advantage of using the same editor as VSCode
 // Includes syntax highlighting and intellisense
 
-export function CodeEditor({ code, setCode, isEditable }) {
+/*
+Maybe move collaborative code here
+function useCollabMonaco() {
+  
+}*/
+
+export function CodeEditor({ setCode, isEditable }) {
   const settings = {
     minimap: {
       enabled: false,
@@ -20,51 +33,110 @@ export function CodeEditor({ code, setCode, isEditable }) {
     settings["readOnly"] = false;
   }
 
+  const provider = useHocuspocusProvider();
+  const users = useHocuspocusAwareness();
+  const bindingRef = useRef(null);
+  const cleanupRef = useRef(null);
+
+  useEffect(() => {
+    return () => cleanupRef.current?.();
+  }, []);
+
+  const handleMount = (editor) => {
+    
+
+    const styleEl = document.createElement("style");
+    document.head.appendChild(styleEl);
+
+    const updateRemoteCursorStyles = () => {
+      let rules = "";
+      provider.awareness.getStates().forEach((state, clientId) => {
+        const color = state?.user?.color;
+        if (!color) return;
+        rules += `
+          .yRemoteSelection-${clientId} {
+            background-color: ${color};
+            opacity: 0.2;
+          }
+          .yRemoteSelectionHead-${clientId} {
+            position: absolute;
+            border-left: ${color} solid 2px;
+            border-top: ${color} solid 2px;
+            border-bottom: ${color} solid 2px;
+            height: 100%;
+            box-sizing: border-box;
+          }
+          .yRemoteSelectionHead-${clientId}::after {
+            position: absolute;
+            top: -1.6em;
+            left: -2px;
+            content: "${state?.user?.name}";
+            background-color: ${color};
+            color: black;
+            border-radius: 4px;
+            border-radius: 0px;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            padding: 0.1rem 0.3rem;
+            user-select: none;
+            white-space: nowrap;
+          }
+        `;
+      });
+      styleEl.textContent = rules;
+    };
+
+    const yText = provider.document.getText("code");
+
+    provider.awareness.on("update", updateRemoteCursorStyles);
+    updateRemoteCursorStyles();
+
+    bindingRef.current = new MonacoBinding(
+      yText,
+      editor.getModel(),
+      new Set([editor]),
+      provider.awareness,
+    );
+
+    cleanupRef.current = () => {
+      provider.awareness.off("update", updateRemoteCursorStyles);
+      styleEl.remove();
+      bindingRef.current?.destroy();
+      bindingRef.current = null;
+    };
+  };
+
   return (
     <Editor
-      value={code}
+      onMount={handleMount}
       theme="vs-dark"
       defaultLanguage="javascript"
       options={settings}
-      onChange={(val) => setCode(val)}
     />
   );
 }
 
 export default function CodePane({
-  code,
   setCode,
+  code,
   visName,
   isEditable,
   extensions,
+  errors,
+  setErrors,
   setExtensions,
-  setRemoteCode,
 }) {
   // This is the component that contains the code pane
   const [showExtensions, setShowExtensions] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+
   const extensionsRef = useRef(null);
+  const errorsRef = useRef(null);
+
   useOutsideAlerter(extensionsRef, setShowExtensions);
-
-  useEffect(() => {
-    let codeUpdateInterval = setInterval(() => setRemoteCode(code), 30000);
-    const handleKeyDown = (event) => {
-      const isSaveShortcut =
-        (event.metaKey || event.ctrlKey) && event.key === "s";
-      if (isSaveShortcut) {
-        event.preventDefault();
-        setRemoteCode(code);
-      }
-    };
-    window.addEventListener("beforeunload", () => setRemoteCode(code));
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      clearInterval(codeUpdateInterval);
-      setRemoteCode(code);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("beforeunload", () => setRemoteCode(code));
-    };
-  }, []);
+  useOutsideAlerter(errorsRef, setShowErrors);
 
   return (
     <div className="h-100 d-flex flex-column">
@@ -77,18 +149,49 @@ export default function CodePane({
           >
             <span className="material-symbols-outlined">download</span>
           </button>
-          <button
-            className="btn btn-link small-bar-button-dark"
-            onClick={() => setShowExtensions(true)}
-          >
-            <span className="material-symbols-outlined">extension</span>
-          </button>
+          {isEditable && (
+            <div className="d-flex">
+              <button
+                className="btn btn-link small-bar-button-dark"
+                onClick={() => setShowExtensions(true)}
+              >
+                <span className="material-symbols-outlined">extension</span>
+              </button>
+              <button
+                className="btn btn-link small-bar-button-dark position-relative"
+                onClick={() => setShowErrors(true)}
+              >
+                <span
+                  className={`material-symbols-outlined ${errors.some((e) => e?.type === "error") ? "text-danger" : ""}`}
+                >
+                  bug_report
+                </span>
+                {errors.length > 0 && (
+                  <span
+                    className={`position-absolute top-50 start-0 translate-middle badge rounded-pill ${errors.some((e) => e?.type === "error") ? "bg-danger" : "bg-secondary"}`}
+                    style={{ fontSize: "9px" }}
+                  >
+                    {errors.length == 50 ? "50+" : errors.length}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
           {showExtensions && (
             <div ref={extensionsRef} className="extensions-popup">
               <ExtensionsModal
                 extensions={extensions}
                 setExtensions={setExtensions}
                 setShowExtensions={setShowExtensions}
+              />
+            </div>
+          )}
+          {showErrors && (
+            <div ref={errorsRef} className="extensions-popup">
+              <ErrorsModal
+                setShowErrors={setShowErrors}
+                errors={errors}
+                setErrors={setErrors}
               />
             </div>
           )}
@@ -101,109 +204,54 @@ export default function CodePane({
   );
 }
 
-function ExtensionsModal({ setShowExtensions, setExtensions, extensions }) {
-  const [newExtensionStatus, setNewExtensionStatus] = useState();
-
-  async function onFormSubmit(e) {
-    e.preventDefault();
-    setNewExtensionStatus("loading");
-    const formData = new FormData(e.target);
-    const submittedExtension = formData.get("extension-input");
-
-    if (extensions.some((extension) => extension.url === submittedExtension)) {
-      setNewExtensionStatus("error");
-      e.target.reset();
-      return;
-    }
-
-    const packageInfo = await checkCDNPackage(submittedExtension).catch((e) =>
-      console.log(e)
-    );
-    //const packageInfo = await simpleCheckPackage(submittedExtension)
-
-    if (!packageInfo) {
-      setNewExtensionStatus("error");
-    } else {
-      setNewExtensionStatus();
-      if (extensions) {
-        setExtensions([...extensions, packageInfo]);
-      } else {
-        setExtensions([packageInfo]);
-      }
-    }
-    e.target.reset();
-  }
-
-  function deleteExtension(extension) {
-    const newExtensions = extensions.filter((item) => item !== extension);
-    setExtensions(newExtensions);
-  }
-
+function ErrorsModal({ setShowErrors, errors, setErrors }) {
   return (
     <div>
-      <div className="d-flex justify-content-end mt-n3">
-        <button
-          className="btn btn-link text-light p-0"
-          onClick={() => setShowExtensions(false)}
-          aria-label="Close modal"
-        >
-          <i className="bi bi-x fs-5"></i>
-        </button>
-      </div>
-      <h4>Extensions</h4>
-      <p>Link any additional JavaScript or P5.js extensions</p>
-      <div>
-        <ul className="list-group">
-          {extensions?.map((extension) => (
-            <ExtensionDisplayItem
-              extensionInfo={extension}
-              deleteExtension={deleteExtension}
-            />
-          ))}
-          {newExtensionStatus === "loading" && (
-            <li className="list-group-item d-flex justify-content-between w-100 bg-transparent border-0 text-light ps-1 pe-1">
-              <div className="spinner-grow text-light" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </li>
+      <div className="d-flex justify-content-between align-items-center mt-n3">
+        <h5 className="mb-0">Console</h5>
+        <div>
+          {errors.length > 0 && (
+            <button
+              className="btn text-light btn-link p-0 me-2"
+              onClick={() => setErrors([])}
+              aria-label="Clear errors"
+              title="Clear"
+            >
+              <span className="material-symbols-outlined">delete</span>
+            </button>
           )}
-          {newExtensionStatus === "error" && (
-            <li className="list-group-item d-flex justify-content-between w-100 bg-transparent border-0 text-light ps-1 pe-1">
-              <span className="text-danger">Error adding the extension!</span>
-            </li>
-          )}
-        </ul>
-        <form className="input-group mb-3" onSubmit={onFormSubmit}>
-          <input
-            type="text"
-            className="form-control"
-            name="extension-input"
-            placeholder="i.e. https://cdn.jsdelivr.net/npm/p5@1.11.0/lib/p5.min.js"
-            aria-label="Add new extensions"
-          />
           <button
-            className="btn btn-secondary text-dark border-grey btn-outline-light"
-            type="submit"
+            className="btn text-light btn-link p-0"
+            onClick={() => setShowErrors(false)}
+            aria-label="Close modal"
           >
-            +
+            <i className="bi bi-x fs-5"></i>
           </button>
-        </form>
+        </div>
+      </div>
+      <div className="mt-2" style={{ maxHeight: "300px", overflowY: "auto" }}>
+        {errors.length === 0 ? (
+          <p className="text-light">No logs</p>
+        ) : (
+          <div className="d-flex flex-column gap-1">
+            {errors.toReversed().map((log, index) => (
+              <LogItem key={index} log={log} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function ExtensionDisplayItem({ extensionInfo, deleteExtension }) {
-  let displayImage;
-  if (extensionInfo?.origin === "cdnjs") {
-    displayImage = "https://avatars.githubusercontent.com/u/637362?s=280&v=4";
-  } else if (extensionInfo?.origin === "jsdelivr") {
-    displayImage =
-      "https://pbs.twimg.com/profile_images/1285630920263966721/Uk6O1QGC_400x400.jpg";
-  }
+function LogItem({ log }) {
+  const isError = log?.type === "error";
 
-  console.log(extensionInfo);
+  if (isError) {
+    // Detect Safari in the code editor
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+<<<<<<< HEAD
   return (
     <li className="list-group-item d-flex justify-content-between w-100 bg-transparent border-0 text-light ps-1 pe-1">
       <div className="d-flex justify-content-start overflow-hidden h-100 w-100">
@@ -211,117 +259,66 @@ function ExtensionDisplayItem({ extensionInfo, deleteExtension }) {
         <span className="pe-1 truncate-text align-self-start">
           {extensionInfo.extensionNames || extensionInfo.url}
         </span>
+=======
+    const errorMessage = log?.message || "Unknown error";
+    const errorStack = log?.stack || "";
+
+    const lineno = log?.lineno;
+    const colno = log?.colno;
+    const lineInfo = lineno
+      ? ` (Line ${lineno}${colno ? `:${colno}` : ""})`
+      : "";
+
+    const isMaskedError =
+      errorMessage === "Script error" ||
+      errorMessage === "Script error." ||
+      errorMessage === "Unknown error";
+
+    return (
+      <div className="text-danger small py-1">
+        {isSafari && isMaskedError && (
+          <div className="text-warning mb-1 small">
+            <strong>Safari:</strong> Error details may be limited. Check browser
+            console.
+          </div>
+        )}
+        <div className="d-flex align-items-start">
+          <span
+            className="material-symbols-outlined me-2"
+            style={{ fontSize: "16px" }}
+          >
+            error
+          </span>
+          <div className="flex-grow-1">
+            <div>
+              <strong>{errorMessage}</strong>
+              {lineInfo && (
+                <span className="text-warning ms-1">{lineInfo}</span>
+              )}
+            </div>
+            {errorStack && (
+              <details className="mt-1">
+                <summary className="text-white small">Stack trace</summary>
+                <pre className="text-white mt-1 mb-0 small">{errorStack}</pre>
+              </details>
+            )}
+          </div>
+        </div>
+>>>>>>> 2c9e30a0c3194b045dee9574ff531c3c3e500dd2
       </div>
-      <button
-        className="btn btn-link text-danger p-0"
-        aria-label="Delete extension"
-        onClick={() => deleteExtension(extensionInfo)}
-      >
-        <i className="bi bi-x"></i>
-      </button>
-    </li>
-  );
-}
-
-// https://cdn.jsdelivr.net/npm/p5@1.11.0/lib/p5.min.js
-//       "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/addons/p5.sound.js",
-//      "https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js"
-
-async function checkCDNPackage(inputURL) {
-  // Step 1: Validate the URL
-  let packageURL;
-  try {
-    packageURL = new URL(inputURL);
-  } catch {
-    throw new Error("Input is not a valid URL");
-  }
-
-  const { hostname, pathname } = packageURL;
-
-  // Step 2: Identify the CDN, parse name & version
-  let apiEndpoint = "";
-  let name = "";
-  let origin;
-  let version = "";
-  let matched = null;
-  let metaURL = "";
-
-  if (hostname.includes("cdnjs")) {
-    origin = "cdnjs";
-    apiEndpoint = "https://api.cdnjs.com/libraries/";
-    matched = pathname.match(/\/libs\/([^/]+)\/([\w.\-+]+)\//);
-    if (!matched) {
-      throw new Error(
-        "Could not parse package name and version from cdnjs URL"
-      );
-    }
-    [, name, version] = matched; // destructuring match groups
-    metaURL = `${apiEndpoint}${name}/${version}`;
-  } else if (hostname.includes("jsdelivr") && pathname.includes("npm")) {
-    origin = "jsdelivr";
-    apiEndpoint = "https://data.jsdelivr.com/v1/packages/npm/";
-    matched = pathname.match(/\/npm\/([^@]+)@([\w.\-+]+)\//);
-    if (!matched) {
-      throw new Error(
-        "Could not parse package name and version from jsDelivr URL"
-      );
-    }
-    [, name, version] = matched;
-    metaURL = `${apiEndpoint}${name}@${version}`;
-  } else {
-    throw new Error("Package not found in jsdelivr or cdnjs");
-  }
-
-  // Step 3: Fetch metadata
-  console.log("metaURL", metaURL);
-  const packageMetadataRaw = await fetch(metaURL, {
-    method: "GET",
-  });
-
-  if (!packageMetadataRaw.ok) {
-    throw new Error(
-      `Metadata request failed with status ${packageMetadataRaw.status}`
     );
   }
 
-  const packageMetadata = await packageMetadataRaw.json();
-
-  if (packageMetadata?.status === 404) {
-    throw new Error("Endpoint not found");
-  }
-
-  // Step 4: Extract filename from the path
-  const filename = pathname.split("/").pop();
-
-  // Step 5: Identify the list of files
-  let packageFiles;
-  if (hostname.includes("cdnjs")) {
-    packageFiles = packageMetadata.files;
-  } else {
-    packageFiles = (packageMetadata.files || []).map(unpackageFileNames);
-  }
-
-  // Step 6: Prepare final info
-  const packageInfo = {
-    name: packageMetadata.name,
-    version: packageMetadata.version,
-    url: packageURL.href,
-    origin,
-    extensionNames: undefined,
-  };
-
-  // Step 7: Check if the given filename is in the list
-  if (packageFiles.includes(filename)) {
-    packageInfo.extensionNames = filename;
-  }
-
-  return packageInfo;
-}
-
-function unpackageFileNames(file) {
-  if (file.type === "directory") {
-    return unpackageFileNames(file.files);
-  } else {
-    return file.name;
-  }
+  const logMessage = log?.message || String(log);
+  return (
+    <div className="text-light small py-1 d-flex align-items-start">
+      <span
+        className="material-symbols-outlined me-2"
+        style={{ fontSize: "16px" }}
+      >
+        terminal
+      </span>
+      <div className="flex-grow-1">{logMessage}</div>
+    </div>
+  );
 }

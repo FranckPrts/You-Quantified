@@ -8,11 +8,13 @@ export default function DataManagementWindow({ showDashbord, changeParameters, v
 
 
   const parameters = useSelector((state) => state.params);
-  const selectorKeys = Object.keys(parameters);
-  const visInfoKeys = visInfo?.parameters.map(({ name }) => name);
+  const visInfoKeys = visInfo?.parameters?.map(({ name }) => name);
 
-  if (JSON.stringify(selectorKeys) != JSON.stringify(visInfoKeys))
-    return <div>Loading...</div>;
+  const inSync =
+    visInfoKeys?.length === Object.keys(parameters).length &&
+    visInfoKeys.every((name) => name in parameters);
+
+  if (!inSync) return <div>Loading...</div>;
 
   return (
     <div className={`h-100 ms-5 me-5 overflow-auto disable-scrollbar ${showDashbord ? "d-none":''}`}>

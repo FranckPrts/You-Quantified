@@ -1,5 +1,5 @@
 import "./App.scss";
-import React, { useState, createContext, useEffect } from "react";
+import React, { useState, createContext, useEffect, useRef } from "react";
 import { QueryMainView } from "./components/visuals/dashboard/main";
 import { MainMenu } from "./components/visuals/menu/menu";
 import { DevicesManager } from "./components/devices/main";
@@ -9,7 +9,7 @@ import MobileUnavaiabilityScreen from "./components/mobile";
 import HomePage from "./components/home/main";
 import Login from "./components/login/main";
 import SignUp from "./components/login/signup";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { AUTH_USER } from "./queries/user";
 import { NewVisual } from "./components/visuals/menu/new";
 import { AINewVisual } from "./components/visuals/new-ai/main";
@@ -29,14 +29,14 @@ function NavBar({ setShowDevices, recording, setRecording }) {
   return (
     <nav className="navbar styled-navbar g-0 p-0 d-flex justify-content-between align-items-center">
       <NavLink className="navbar-brand m-0 ms-4 h5" to="/">
-        <span className="fw-normal">You:</span> Quantified
+        <span className="fw-normal">You</span>Quantified
       </NavLink>
       <div className="h-100 m-0 g-0 d-flex align-items-center">
         <div className="me-4">
           <MyUserName />
         </div>
         <NavLink className="nav-link" to="/visuals">
-          Visuals
+          Projects
         </NavLink>
         <button className="data-btn" onClick={() => setShowDevices(true)}>
           Data
@@ -53,13 +53,25 @@ const saveObject = {};
 function DesktopApp() {
   const [showDevices, setShowDevices] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [camStream, setCamStream] = useState(null);
+  const videoRef = useRef(null); // For UI display
+  const canvasRef = useRef(null); // For canvas overlay
+  const processingVideoRef = useRef(null); // Hidden video for face detection
 
   return (
-    <>
+    <div className="h-100 d-flex flex-column">
       <NavBar
         setShowDevices={setShowDevices}
         recording={recording}
         setRecording={setRecording}
+      />
+      {/* Hidden video element for face detection processing */}
+      <video 
+        ref={processingVideoRef}
+        style={{ display: 'none' }}
+        autoPlay
+        playsInline
+        muted
       />
       <div className="hv-100">
         {showDevices && (
@@ -68,6 +80,11 @@ function DesktopApp() {
             saveObject={saveObject}
             recording={recording}
             setRecording={setRecording}
+            camStream={camStream}
+            setCamStream={setCamStream}
+            videoRef={videoRef}
+            canvasRef={canvasRef}
+            processingVideoRef={processingVideoRef}
           />
         )}
         <Routes>
@@ -81,7 +98,7 @@ function DesktopApp() {
           <Route path="/" element={<HomePage />} />
         </Routes>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -91,7 +108,7 @@ export default function App() {
   ) : (
     <DesktopApp />
   );
-  const { data, loading, error } = useQuery(AUTH_USER);
+  const { data, dataState, error } = useQuery(AUTH_USER);
 
   const [currentUser, setCurrentUser] = useState();
 
@@ -105,7 +122,8 @@ export default function App() {
     setCurrentUser({ ...data?.authenticatedItem, isAdmin });
   }, [data]);
 
-  if (loading) return <div></div>;
+
+  if (dataState === "empty" && !error) return <div></div>;
 
   return (
     <UserContext.Provider value={{ currentUser, setCurrentUser }}>
